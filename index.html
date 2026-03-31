@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>누에마 배송 정산 계산기</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; line-height: 1.6; }
+        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .section { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #3498db; border-radius: 4px; }
+        .section-title { font-weight: bold; margin-bottom: 10px; color: #2980b9; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #555; }
+        input[type="number"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        .result-box { margin-top: 20px; padding: 20px; background-color: #e8f6f3; border: 1px solid #1abc9c; border-radius: 4px; }
+        .result-title { font-size: 1.2em; font-weight: bold; color: #16a085; margin-bottom: 10px; }
+        .result-value { font-size: 1.5em; font-weight: bold; color: #d35400; text-align: right; }
+        .note { font-size: 0.8em; color: #7f8c8d; margin-top: -10px; margin-bottom: 15px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>누에마 정산 & 미수금 계산기</h2>
+
+    <div class="section">
+        <div class="section-title">1. 기본 단가 설정</div>
+        <label for="unitPrice">건당 배송 단가 (원)</label>
+        <input type="number" id="unitPrice" placeholder="예: 800" value="">
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. 당월 정산 대상 (익월 7일 입금 건수)</div>
+        <label for="musinsaCurrent">무신사/교원웰스 (전월 26일 ~ 당월 25일)</label>
+        <input type="number" id="musinsaCurrent" placeholder="건수 입력" value="0">
+        
+        <label for="kolonCurrent">코오롱 (전월 21일 ~ 당월 20일)</label>
+        <input type="number" id="kolonCurrent" placeholder="건수 입력" value="0">
+        
+        <label for="othersCurrent">그 외 일반 (당월 1일 ~ 말일)</label>
+        <input type="number" id="othersCurrent" placeholder="건수 입력" value="0">
+    </div>
+
+    <div class="section">
+        <div class="section-title">3. 익월 이월 대상 (업체에 묶이는 건수)</div>
+        <label for="musinsaCarry">무신사/교원웰스 미수 건수 (당월 26일 ~ 말일)</label>
+        <input type="number" id="musinsaCarry" placeholder="건수 입력" value="0">
+        
+        <label for="kolonCarry">코오롱 미수 건수 (당월 21일 ~ 말일)</label>
+        <input type="number" id="kolonCarry" placeholder="건수 입력" value="0">
+        
+        <label for="nbCarry">뉴발란스 전체 (전액 익월 정산)</label>
+        <input type="number" id="nbCarry" placeholder="건수 입력" value="0">
+    </div>
+
+    <button onclick="calculateSettlement()">정산 및 미수금 계산하기</button>
+
+    <div id="resultArea" class="result-box" style="display:none;">
+        <div class="result-title">■ 당월 실 입금액 (익월 7일)</div>
+        <span class="note">* 세금 3.3% 및 보증금 1만 원 공제 후 금액</span>
+        <div id="finalIncome" class="result-value">0 원</div>
+        <hr style="border:0; border-top:1px dashed #1abc9c; margin: 15px 0;">
+        <div class="result-title">■ 깔고 가는 미수금 (다음 달 이월액)</div>
+        <span class="note">* 현재 업체에 담보로 묶여있는 누에마의 실질 자산</span>
+        <div id="carryOverAmount" class="result-value">0 원</div>
+    </div>
+</div>
+
+<script>
+    // 페이지 로드 시 저장된 단가 불러오기
+    window.onload = function() {
+        const savedPrice = localStorage.getItem('nouema_unit_price');
+        if (savedPrice) {
+            document.getElementById('unitPrice').value = savedPrice;
+        }
+    }
+
+    function calculateSettlement() {
+        const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+        
+        // 단가 로컬스토리지에 저장
+        localStorage.setItem('nouema_unit_price', unitPrice);
+
+        // 당월 정산 건수 합산
+        const mCurrent = parseFloat(document.getElementById('musinsaCurrent').value) || 0;
+        const kCurrent = parseFloat(document.getElementById('kolonCurrent').value) || 0;
+        const oCurrent = parseFloat(document.getElementById('othersCurrent').value) || 0;
+        const totalCurrentCount = mCurrent + kCurrent + oCurrent;
+
+        // 당월 정산 금액 계산
+        const grossIncome = totalCurrentCount * unitPrice;
+        const tax = grossIncome * 0.033;
+        const deposit = 10000;
+        const netIncome = Math.floor(grossIncome - tax - deposit); // 원단위 절사
+
+        // 이월(미수금) 건수 합산
+        const mCarry = parseFloat(document.getElementById('musinsaCarry').value) || 0;
+        const kCarry = parseFloat(document.getElementById('kolonCarry').value) || 0;
+        const nbCarry = parseFloat(document.getElementById('nbCarry').value) || 0;
+        const totalCarryCount = mCarry + kCarry + nbCarry;
+
+        // 미수금액 계산 (세금 공제 전 총액 기준)
+        const carryOverAmount = totalCarryCount * unitPrice;
+
+        // 결과 화면 출력
+        document.getElementById('finalIncome').innerText = netIncome.toLocaleString('ko-KR') + " 원";
+        document.getElementById('carryOverAmount').innerText = carryOverAmount.toLocaleString('ko-KR') + " 원";
+        document.getElementById('resultArea').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
