@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nouema 정산 계산기 v6</title>
+<title>Nouema 정산 계산기 v7</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -44,12 +44,14 @@ body{
 .unit-iw input:focus{border-color:var(--gold)}
 .unit-sfx{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);pointer-events:none}
 
-/* ── ACTION BAR (Save & Backup) ── */
-.action-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px}
-.action-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:10px 0;font-size:11px;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;font-family:'Noto Sans KR',sans-serif;position:relative}
+/* ── ACTION BAR (Save, Reset, Backup) ── */
+.action-bar{display:grid;grid-template-columns:repeat(4, 1fr);gap:4px;margin-bottom:12px}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:4px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:9px 0;font-size:10px;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;font-family:'Noto Sans KR',sans-serif;position:relative}
 .action-btn:hover{background:var(--s2);border-color:var(--muted)}
 .action-btn.save{color:var(--green);border-color:rgba(52,211,153,.3)}
 .action-btn.save:hover{background:rgba(52,211,153,.1)}
+.action-btn.reset{color:var(--red);border-color:rgba(248,113,113,.3)}
+.action-btn.reset:hover{background:rgba(248,113,113,.1)}
 .action-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
 
 /* ── EXCEL ZONE ── */
@@ -78,8 +80,6 @@ body{
 /* ── PANEL ── */
 .brand-panel{display:none;background:var(--s1);border:1px solid var(--border);border-radius:0 4px 4px 4px;overflow:hidden;margin-bottom:12px}
 .brand-panel.active{display:block}
-
-/* prev month badge */
 .prev-banner{display:flex;align-items:center;gap:10px;padding:9px 14px;background:rgba(240,180,41,.06);border-bottom:1px solid var(--border)}
 .prev-banner-icon{font-size:12px}
 .prev-banner-text{font-size:10px;color:var(--gold);flex:1;line-height:1.5}
@@ -162,19 +162,24 @@ body{
 .bb-type.c{color:var(--orange);background:rgba(224,123,57,.1)}
 .bb-type.ac{color:var(--purple);background:rgba(167,139,250,.1)}
 
-/* carry block */
-.res-carry{padding:16px 18px;background:linear-gradient(135deg,rgba(240,180,41,.04) 0%,transparent 60%)}
+/* carry block 1 (다음달) */
+.res-carry{padding:16px 18px;background:linear-gradient(135deg,rgba(240,180,41,.04) 0%,transparent 60%);border-bottom:1px solid var(--border)}
 .rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .rc-badge{font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;border-radius:20px;background:rgba(240,180,41,.1);color:var(--gold);border:1px solid rgba(240,180,41,.25);letter-spacing:.08em}
 .rc-main{display:flex;align-items:flex-end;gap:8px;margin-bottom:6px}
 .rc-amount{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--gold);line-height:1}
 .rc-unit{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:3px}
-.rc-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.rc-rows{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px}
 .rc-cell{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:9px 11px}
 .rc-cell-lbl{font-size:9px;color:var(--muted);margin-bottom:4px;letter-spacing:.03em}
 .rc-cell-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--orange)}
-.rc-cell-val.nb{color:var(--purple)}
 .rc-cell-date{font-family:'DM Mono',monospace;font-size:8px;color:var(--dim);margin-top:2px}
+
+/* carry block 2 (익익월 - 뉴발란스) */
+.res-carry.nb-carry{background:linear-gradient(135deg,rgba(167,139,250,.06) 0%,transparent 60%);border-bottom:none}
+.rc-badge.nb{color:var(--purple);background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25)}
+.rc-amount.nb{color:var(--purple)}
+.rc-cell-val.nb{color:var(--purple)}
 
 /* ── FOOTER ── */
 .footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between}
@@ -208,16 +213,17 @@ body{
 <div class="unit-box">
   <div class="unit-lbl">건당<br>단가</div>
   <div class="unit-iw">
-    <input type="number" id="unitPrice" placeholder="800" oninput="saveUnit();compute()">
+    <input type="number" id="unitPrice" placeholder="단가 미입력시 계산 불가" oninput="saveUnit();compute()">
     <span class="unit-sfx">원 / 건</span>
   </div>
 </div>
 
 <div class="action-bar">
-  <button class="action-btn save" onclick="manualSave()">💾 현재 입력 저장</button>
-  <button class="action-btn" onclick="exportBackup()">📤 데이터 백업</button>
+  <button class="action-btn save" onclick="manualSave()">💾 저장</button>
+  <button class="action-btn reset" onclick="resetMonth()">🗑️ 당월 초기화</button>
+  <button class="action-btn" onclick="exportBackup()">📤 백업</button>
   <label class="action-btn">
-    📥 데이터 복원
+    📥 복원
     <input type="file" accept=".json" onchange="importBackup(event)">
   </label>
 </div>
@@ -288,7 +294,7 @@ body{
   <div class="cal-wrap">
     <div class="cal-hdr"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
     <div class="cal-grid" id="grid_nb"></div>
-    <div class="legend"><div class="leg"><div class="lsq ac"></div>전액 익월 이월 (당월 정산 없음)</div></div>
+    <div class="legend"><div class="leg"><div class="lsq ac"></div>전액 익익월 이월 (당월 정산 없음)</div></div>
   </div>
   <div class="mini-sub one">
     <div class="ms-cell"><span class="ms-label">이월 건수 (전액)</span><div style="display:flex;align-items:center"><span class="ms-val p" id="sub_nb">0</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-left:3px">건</span></div></div>
@@ -341,10 +347,10 @@ body{
 
   <div class="res-carry">
     <div class="rc-top">
-      <div class="rc-badge">다음달 이월 미수금(미정산 잔여 미수금)</div>
+      <div class="rc-badge">다음달 이월 미수금 (미정산 잔여 미수금)</div>
     </div>
     <div class="rc-main">
-      <div class="rc-amount" id="rCarry">0</div>
+      <div class="rc-amount" id="rCarry1">0</div>
       <div class="rc-unit">원</div>
     </div>
     <div class="rc-rows">
@@ -358,16 +364,28 @@ body{
         <div class="rc-cell-val" id="rcKl">0건</div>
         <div class="rc-cell-date" id="rcKlDate">—</div>
       </div>
+    </div>
+  </div>
+
+  <div class="res-carry nb-carry">
+    <div class="rc-top">
+      <div class="rc-badge nb">다다음달(익익월) 미정산 잔여 미수금</div>
+    </div>
+    <div class="rc-main">
+      <div class="rc-amount nb" id="rCarry2">0</div>
+      <div class="rc-unit">원</div>
+    </div>
+    <div class="rc-rows" style="grid-template-columns:1fr;">
       <div class="rc-cell">
-        <div class="rc-cell-lbl">뉴발란스 이월</div>
+        <div class="rc-cell-lbl">뉴발란스 당월 전체 이월분</div>
         <div class="rc-cell-val nb" id="rcNb">0건</div>
-        <div class="rc-cell-date">당월 전액</div>
+        <div class="rc-cell-date">당월 작업분 전액 분리</div>
       </div>
     </div>
   </div>
 
 </div><div class="footer">
-  <span>Nouema © 2026 · 시스템 v6</span>
+  <span>Nouema © 2026 · 시스템 v7</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -413,11 +431,18 @@ function saveData(){
 
 function saveUnit(){localStorage.setItem('nueema_unit',document.getElementById('unitPrice').value)}
 
-// 수동 저장 및 토스트 알림
 function manualSave() {
-  saveData();
-  saveUnit();
-  showToast('데이터가 안전하게 저장되었습니다.');
+  saveData(); saveUnit(); showToast('데이터가 안전하게 저장되었습니다.');
+}
+
+// 당월 초기화 로직
+function resetMonth() {
+  if(!confirm(`${M}월 배송 데이터를 모두 초기화하시겠습니까?\n(삭제 후에는 복구가 불가능합니다)`)) return;
+  const data = loadData(Y,M);
+  data.ms = {}; data.kl = {}; data.nb = {}; data.ot = {};
+  localStorage.setItem(storageKey(Y,M), JSON.stringify(data));
+  render();
+  showToast(`${M}월 데이터가 모두 초기화되었습니다.`);
 }
 
 function showToast(msg) {
@@ -427,9 +452,8 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-// 백업 데이터 다운로드 (JSON)
 function exportBackup() {
-  saveData(); // 내보내기 전 최신화
+  saveData();
   const backupData = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -439,8 +463,7 @@ function exportBackup() {
   }
   const blob = new Blob([JSON.stringify(backupData)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
+  const a = document.createElement('a'); a.href = url;
   const d = new Date();
   const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
   a.download = `Nouema_backup_${dateStr}.json`;
@@ -448,10 +471,8 @@ function exportBackup() {
   showToast('백업 파일이 다운로드 되었습니다.');
 }
 
-// 백업 데이터 복원 (JSON 업로드)
 function importBackup(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     try {
@@ -464,19 +485,15 @@ function importBackup(e) {
         }
       }
       if (count > 0) {
-        render();
-        showToast('데이터가 성공적으로 복원되었습니다.');
-      } else {
-        alert('유효한 Nouema 백업 데이터가 없습니다.');
-      }
+        render(); showToast('데이터가 성공적으로 복원되었습니다.');
+      } else { alert('유효한 Nouema 백업 데이터가 없습니다.'); }
     } catch(err) { alert('복원 실패: 올바른 백업 파일(JSON)이 아닙니다.'); }
   };
-  reader.readAsText(file);
-  e.target.value = '';
+  reader.readAsText(file); e.target.value = '';
 }
 
 // ──────────────────────────
-// INIT
+// INIT & RENDER
 // ──────────────────────────
 window.onload=()=>{
   const u=localStorage.getItem('nueema_unit');
@@ -489,9 +506,6 @@ function changeMonth(d){
   render();
 }
 
-// ──────────────────────────
-// RENDER EVERYTHING
-// ──────────────────────────
 function render(){
   document.getElementById('mpVal').textContent=`${Y}.${String(M).padStart(2,'0')}`;
   BRANDS.forEach(b=>buildGrid(b));
@@ -500,11 +514,11 @@ function render(){
 }
 
 // ──────────────────────────
-// BUILD CALENDAR
+// CALENDAR GRID & MATH
 // ──────────────────────────
 function buildGrid(brand){
   const maxDay=ld();
-  const firstDow=(new Date(Y,M-1,1).getDay()+6)%7; // Mon=0
+  const firstDow=(new Date(Y,M-1,1).getDay()+6)%7;
   const data=loadData(Y,M);
   const grid=document.getElementById(`grid_${brand}`);
   grid.innerHTML='';
@@ -519,29 +533,22 @@ function buildGrid(brand){
 
     if(day<1||day>maxDay){
       cell.classList.add('empty');
-      const inp=document.createElement('input');
-      inp.type='number';inp.disabled=true;
-      cell.appendChild(inp);
+      const inp=document.createElement('input'); inp.type='number'; inp.disabled=true; cell.appendChild(inp);
     } else {
-      const dn=document.createElement('span');
-      dn.className='dn';dn.textContent=day;cell.appendChild(dn);
-
+      const dn=document.createElement('span'); dn.className='dn'; dn.textContent=day; cell.appendChild(dn);
       const inp=document.createElement('input');
       inp.type='number';inp.min=0;inp.placeholder='0';
       inp.dataset.day=day;inp.dataset.brand=brand;
       inp.value=data[brand][day]||'';
       inp.setAttribute('inputmode','numeric');
 
-      // color class
       if(brand==='ms') cell.classList.add(day<=25?'settle':'carry-c');
       else if(brand==='kl') cell.classList.add(day<=20?'settle':'carry-c');
       else if(brand==='nb') cell.classList.add('all-carry');
       else cell.classList.add('all-settle');
 
       inp.addEventListener('input',()=>{
-        inp.setAttribute('data-val',inp.value);
         updateSub(brand);
-        // debounced auto-save + compute
         clearTimeout(saveTimer[brand]);
         saveTimer[brand]=setTimeout(()=>{saveData();compute();},600);
       });
@@ -558,9 +565,6 @@ function buildGrid(brand){
   updateSub(brand);
 }
 
-// ──────────────────────────
-// SUBTOTALS
-// ──────────────────────────
 function getSum(brand,from,to){
   let s=0;
   for(let d=from;d<=Math.min(to,ld());d++){
@@ -585,69 +589,60 @@ function updateSub(brand){
   }
 }
 
-// ──────────────────────────
-// PREV MONTH BANNERS
-// ──────────────────────────
 function updatePrevBanners(){
-  const p=prevYM();
-  const prevData=loadData(p.y,p.m);
-  const prevLd=lastDay(p.y,p.m);
-
-  let msCarryPrev=0;
+  const p=prevYM(); const prevData=loadData(p.y,p.m); const prevLd=lastDay(p.y,p.m);
+  let msCarryPrev=0, klCarryPrev=0;
   for(let d=26;d<=prevLd;d++) msCarryPrev+=parseFloat(prevData.ms[d])||0;
   document.getElementById('prevRange_ms').textContent=`${p.m}월 26일 ~ ${p.m}월 ${prevLd}일`;
   document.getElementById('prevVal_ms').textContent=msCarryPrev+'건';
 
-  let klCarryPrev=0;
   for(let d=21;d<=prevLd;d++) klCarryPrev+=parseFloat(prevData.kl[d])||0;
   document.getElementById('prevRange_kl').textContent=`${p.m}월 21일 ~ ${p.m}월 ${prevLd}일`;
   document.getElementById('prevVal_kl').textContent=klCarryPrev+'건';
 }
 
-// ──────────────────────────
-// COMPUTE RESULT
-// ──────────────────────────
 function compute(){
   const unit=parseFloat(document.getElementById('unitPrice').value)||0;
   const max=ld();
-  const p=prevYM();
-  const prevData=loadData(p.y,p.m);
-  const prevLd=lastDay(p.y,p.m);
+  const p=prevYM(); const prevData=loadData(p.y,p.m); const prevLd=lastDay(p.y,p.m);
 
-  // prev month carry
   let msPrevCarry=0,klPrevCarry=0;
   for(let d=26;d<=prevLd;d++) msPrevCarry+=parseFloat(prevData.ms[d])||0;
   for(let d=21;d<=prevLd;d++) klPrevCarry+=parseFloat(prevData.kl[d])||0;
 
-  // current month
-  const msCurSettle=getSum('ms',1,25);
-  const msCurCarry=getSum('ms',26,max);
-  const klCurSettle=getSum('kl',1,20);
-  const klCurCarry=getSum('kl',21,max);
-  const nbAll=getSum('nb',1,max);
-  const otAll=getSum('ot',1,max);
+  const msCurSettle=getSum('ms',1,25), msCurCarry=getSum('ms',26,max);
+  const klCurSettle=getSum('kl',1,20), klCurCarry=getSum('kl',21,max);
+  const nbAll=getSum('nb',1,max), otAll=getSum('ot',1,max);
 
-  // 당월 총 배송 실적 (이번 달에 일한 전체 수량)
+  // 당월 실적 총괄
   const currentMonthTotalCnt = msCurSettle + msCurCarry + klCurSettle + klCurCarry + nbAll + otAll;
   const currentMonthTotalAmt = currentMonthTotalCnt * unit;
 
-  // totals
+  // 당월 정산
   const msSettle=msPrevCarry+msCurSettle;
   const klSettle=klPrevCarry+klCurSettle;
   const settle=msSettle+klSettle+otAll;
-  const carry=msCurCarry+klCurCarry+nbAll;
+  
+  // 미수금 분리
+  const carry1 = msCurCarry + klCurCarry; // 익월 (무신사/코오롱)
+  const carry2 = nbAll; // 익익월 (뉴발란스)
 
   const gross=settle*unit;
   const tax=gross*0.033;
   const dep=10000;
-  const net=Math.floor(gross-tax-dep);
-  const carryAmt=carry*unit;
+  
+  // 단가가 0일때 마이너스 금액 표기 방지 처리
+  let net = 0;
+  if(unit > 0) {
+    net = Math.floor(gross-tax-dep);
+  }
 
-  // date
+  const carryAmt1 = carry1 * unit;
+  const carryAmt2 = carry2 * unit;
+
   const nd=new Date(Y,M,7);
   const ds=`${nd.getFullYear()}.${String(nd.getMonth()+1).padStart(2,'0')}.07`;
 
-  // fill DOM
   document.getElementById('rtTotalCnt').textContent=currentMonthTotalCnt.toLocaleString() + '건';
   document.getElementById('rtTotalAmt').textContent='총 ' + fmt(currentMonthTotalAmt) + '원 발생';
 
@@ -655,16 +650,16 @@ function compute(){
   document.getElementById('rGross').textContent=fmt(gross);
   document.getElementById('rTax').textContent=fmt(Math.floor(tax));
   document.getElementById('rDate').textContent=ds;
-  document.getElementById('rCarry').textContent=fmt(carryAmt);
+  
+  document.getElementById('rCarry1').textContent=fmt(carryAmt1);
+  document.getElementById('rCarry2').textContent=fmt(carryAmt2);
 
-  // carry cells
   document.getElementById('rcMs').textContent=msCurCarry+'건';
   document.getElementById('rcMsDate').textContent=`${M}월 26일~${M}월 ${max}일`;
   document.getElementById('rcKl').textContent=klCurCarry+'건';
   document.getElementById('rcKlDate').textContent=`${M}월 21일~${M}월 ${max}일`;
   document.getElementById('rcNb').textContent=nbAll+'건';
 
-  // brand breakdown rows
   const pm=prevYM().m;
   const rows=[
     { name:'무신사', prev:msPrevCarry>0?{cnt:msPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:msCurSettle,label:'당월 정산'}, total:msSettle, type:'s',typeLabel:'정산' },
@@ -672,39 +667,27 @@ function compute(){
     { name:'그 외', prev:null, curr:{cnt:otAll,label:'당월 정산'}, total:otAll, type:'s',typeLabel:'정산' }
   ];
 
-  const bbRows=document.getElementById('bbRows');
-  bbRows.innerHTML='';
+  const bbRows=document.getElementById('bbRows'); bbRows.innerHTML='';
   rows.forEach(r=>{
     if(r.total===0 && !r.prev) return;
-    const row=document.createElement('div');
-    row.className='bb-row';
+    const row=document.createElement('div'); row.className='bb-row';
     let detailHtml='';
     if(r.prev) detailHtml+=`<span class="bb-prev">${r.prev.label} ${r.prev.cnt}건</span><span class="bb-plus">+</span>`;
     detailHtml+=`<span class="bb-curr">${r.curr.label} ${r.curr.cnt}건</span>`;
     if(r.prev) detailHtml+=`<span class="bb-eq">=</span>`;
-
-    row.innerHTML=`
-      <div class="bb-name">${r.name}</div>
-      <div class="bb-detail">
-        ${detailHtml}
-        <span class="bb-total">${r.total}건</span>
-        <span class="bb-type ${r.type}">${r.typeLabel}</span>
-      </div>`;
+    row.innerHTML=`<div class="bb-name">${r.name}</div><div class="bb-detail">${detailHtml}<span class="bb-total">${r.total}건</span><span class="bb-type ${r.type}">${r.typeLabel}</span></div>`;
     bbRows.appendChild(row);
   });
 }
 
 // ──────────────────────────
-// TABS
+// TABS & EXCEL UPLOAD
 // ──────────────────────────
 function showTab(brand){
   BRANDS.forEach(b=>{document.getElementById(`panel_${b}`).classList.toggle('active',b===brand);});
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>{btn.classList.toggle('active',BRANDS[i]===brand);});
 }
 
-// ──────────────────────────
-// EXCEL UPLOAD
-// ──────────────────────────
 function handleFile(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
@@ -716,23 +699,18 @@ function handleFile(e){
       parseRows(rows,file.name);
     }catch(err){setXlStatus('파일 읽기 실패: '+err.message,false)}
   };
-  reader.readAsBinaryString(file);
-  e.target.value='';
+  reader.readAsBinaryString(file); e.target.value='';
 }
 
 function parseRows(rows,fname){
   if(!rows||rows.length<2){setXlStatus('데이터 없음',false);return}
-  let count=0;
-  const colMap=['ms','kl','nb','ot'];
+  let count=0; const colMap=['ms','kl','nb','ot'];
   for(let r=1;r<rows.length;r++){
     const row=rows[r];if(!row[0])continue;
     const day=parseDay(row[0]);if(!day||day<1||day>ld())continue;
     colMap.forEach((b,i)=>{
       const qty=parseFloat(row[i+1])||0;
-      if(qty>0){
-        const el=document.querySelector(`#grid_${b} input[data-day="${day}"]`);
-        if(el){el.value=qty;updateSub(b);count++;}
-      }
+      if(qty>0){const el=document.querySelector(`#grid_${b} input[data-day="${day}"]`); if(el){el.value=qty;updateSub(b);count++;}}
     });
   }
   if(count>0){saveData();compute();setXlStatus(`✓ ${fname} — ${count}개 항목 입력됨`,true); showToast('엑셀 데이터가 적용되었습니다.');}
@@ -743,9 +721,7 @@ function parseDay(val){
   if(!val)return null;
   if(val instanceof Date)return val.getDate();
   if(typeof val==='number'){if(val>=1&&val<=31)return val;const d=new Date(Math.round((val-25569)*86400*1000));if(!isNaN(d))return d.getDate()}
-  const s=String(val).trim();
-  const m2=s.match(/\d{4}[-\/]\d{1,2}[-\/](\d{1,2})/);
-  const m3=s.match(/^(\d{1,2})[일]?$/);
+  const s=String(val).trim(); const m2=s.match(/\d{4}[-\/]\d{1,2}[-\/](\d{1,2})/); const m3=s.match(/^(\d{1,2})[일]?$/);
   if(m2)return parseInt(m2[1]);if(m3)return parseInt(m3[1]);return null;
 }
 
@@ -756,12 +732,10 @@ function setXlStatus(msg,ok){
 
 function dlTemplate(e){
   e.preventDefault();e.stopPropagation();
-  const wb=XLSX.utils.book_new();
-  const maxDay=ld();
+  const wb=XLSX.utils.book_new(); const maxDay=ld();
   const ws1=[['날짜','무신사/교원웰스','코오롱','뉴발란스','그 외']];
   for(let d=1;d<=maxDay;d++){ws1.push([`${Y}-${String(M).padStart(2,'0')}-${String(d).padStart(2,'0')}`,0,0,0,0]);}
-  const ws=XLSX.utils.aoa_to_sheet(ws1);
-  ws['!cols']=[{wch:14},{wch:14},{wch:10},{wch:12},{wch:8}];
+  const ws=XLSX.utils.aoa_to_sheet(ws1); ws['!cols']=[{wch:14},{wch:14},{wch:10},{wch:12},{wch:8}];
   XLSX.utils.book_append_sheet(wb,ws,'입력서식');
   XLSX.writeFile(wb,`Nouema_입력_${Y}${String(M).padStart(2,'0')}.xlsx`);
 }
