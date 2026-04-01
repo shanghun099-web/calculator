@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>누에마 정산 계산기 v6</title>
+<title>Nouema 정산 계산기 v6</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -195,7 +195,7 @@ body{
 <div class="hdr">
   <div>
     <div class="hdr-eye">배송 정산 시스템</div>
-    <div class="hdr-title">NUEEMA CALC</div>
+    <div class="hdr-title">Nouema CALC</div>
     <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 기능 탑재</div>
   </div>
   <div class="month-pick">
@@ -341,7 +341,7 @@ body{
 
   <div class="res-carry">
     <div class="rc-top">
-      <div class="rc-badge">다음달 이월 미수금 (회사 유보금)</div>
+      <div class="rc-badge">다음달 이월 미수금(미정산 잔여 미수금)</div>
     </div>
     <div class="rc-main">
       <div class="rc-amount" id="rCarry">0</div>
@@ -367,7 +367,7 @@ body{
   </div>
 
 </div><div class="footer">
-  <span>누에마 © 2026 · 시스템 v6</span>
+  <span>Nouema © 2026 · 시스템 v6</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -443,7 +443,7 @@ function exportBackup() {
   a.href = url;
   const d = new Date();
   const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
-  a.download = `nueema_backup_${dateStr}.json`;
+  a.download = `Nouema_backup_${dateStr}.json`;
   a.click();
   showToast('백업 파일이 다운로드 되었습니다.');
 }
@@ -467,7 +467,7 @@ function importBackup(e) {
         render();
         showToast('데이터가 성공적으로 복원되었습니다.');
       } else {
-        alert('유효한 누에마 백업 데이터가 없습니다.');
+        alert('유효한 Nouema 백업 데이터가 없습니다.');
       }
     } catch(err) { alert('복원 실패: 올바른 백업 파일(JSON)이 아닙니다.'); }
   };
@@ -763,7 +763,7 @@ function dlTemplate(e){
   const ws=XLSX.utils.aoa_to_sheet(ws1);
   ws['!cols']=[{wch:14},{wch:14},{wch:10},{wch:12},{wch:8}];
   XLSX.utils.book_append_sheet(wb,ws,'입력서식');
-  XLSX.writeFile(wb,`누에마_입력_${Y}${String(M).padStart(2,'0')}.xlsx`);
+  XLSX.writeFile(wb,`Nouema_입력_${Y}${String(M).padStart(2,'0')}.xlsx`);
 }
 
 // drag & drop
