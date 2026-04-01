@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nouema 정산 계산기 v8</title>
+<title>Nouema 정산 계산기 v9</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -253,7 +253,7 @@ body{
 <div class="brand-panel active" id="panel_ms">
   <div class="prev-banner" id="prevBanner_ms">
     <div class="prev-banner-icon">🔗</div>
-    <div class="prev-banner-text">전월 이월분 자동 연계 <span class="prev-banner-sub" id="prevRange_ms">—</span></div>
+    <div class="prev-banner-text">전월 이월분 당월 정산 자동 합산 <span class="prev-banner-sub" id="prevRange_ms">—</span></div>
     <div class="prev-banner-val" id="prevVal_ms">0건</div>
   </div>
   <div class="cal-wrap">
@@ -273,7 +273,7 @@ body{
 <div class="brand-panel" id="panel_kl">
   <div class="prev-banner" id="prevBanner_kl">
     <div class="prev-banner-icon">🔗</div>
-    <div class="prev-banner-text">전월 이월분 자동 연계 <span class="prev-banner-sub" id="prevRange_kl">—</span></div>
+    <div class="prev-banner-text">전월 이월분 당월 정산 자동 합산 <span class="prev-banner-sub" id="prevRange_kl">—</span></div>
     <div class="prev-banner-val" id="prevVal_kl">0건</div>
   </div>
   <div class="cal-wrap">
@@ -293,13 +293,13 @@ body{
 <div class="brand-panel" id="panel_nb">
   <div class="prev-banner" id="prevBanner_nb">
     <div class="prev-banner-icon">🔗</div>
-    <div class="prev-banner-text">전월 작업분 당월 자동 정산 연계 <span class="prev-banner-sub" id="prevRange_nb">—</span></div>
+    <div class="prev-banner-text">전월 작업분 당월 정산 자동 합산 <span class="prev-banner-sub" id="prevRange_nb">—</span></div>
     <div class="prev-banner-val" id="prevVal_nb">0건</div>
   </div>
   <div class="cal-wrap">
     <div class="cal-hdr"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
     <div class="cal-grid" id="grid_nb"></div>
-    <div class="legend"><div class="leg"><div class="lsq ac"></div>당월 작업분 전액 익익월 이월 (당월 정산 없음)</div></div>
+    <div class="legend"><div class="leg"><div class="lsq ac"></div>당월 작업분 전액 다음달로 이월 (당월 정산 없음)</div></div>
   </div>
   <div class="mini-sub one">
     <div class="ms-cell"><span class="ms-label">이월 건수 (전액)</span><div style="display:flex;align-items:center"><span class="ms-val p" id="sub_nb">0</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-left:3px">건</span></div></div>
@@ -322,7 +322,7 @@ body{
   <div class="res-grand-total">
     <div class="rgt-left">
       <div class="rgt-title">당월 총 배송 실적 (모든 브랜드)</div>
-      <div class="rgt-sub">이번 달 순수하게 작업한 총 건수와 수수료</div>
+      <div class="rgt-sub">이번 달에 순수하게 배송한 총 건수와 수수료</div>
     </div>
     <div class="rgt-right">
       <div class="rgt-cnt" id="rtTotalCnt">0건</div>
@@ -345,7 +345,7 @@ body{
   </div>
 
   <div class="brand-breakdown">
-    <div class="bb-title">7일 수령 정산액 상세 구성 (전월 이월분 포함)</div>
+    <div class="bb-title" id="bbTitleLabel">7일 수령 정산액 상세 구성 (전월 이월분 포함)</div>
     <div class="bb-rows" id="bbRows">
       </div>
   </div>
@@ -384,13 +384,13 @@ body{
       <div class="rc-cell">
         <div class="rc-cell-lbl">뉴발란스 당월 전체 이월분</div>
         <div class="rc-cell-val nb" id="rcNb">0건</div>
-        <div class="rc-cell-date">당월 작업분 전액 분리</div>
+        <div class="rc-cell-date" id="rcNbDate">—</div>
       </div>
     </div>
   </div>
 
 </div><div class="footer">
-  <span>Nouema © 2026 · 시스템 v8</span>
+  <span>Nouema © 2026 · 시스템 v9</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -440,7 +440,6 @@ function manualSave() {
   saveData(); saveUnit(); showToast('데이터가 안전하게 저장되었습니다.');
 }
 
-// 당월 초기화 로직
 function resetMonth() {
   if(!confirm(`${M}월 배송 데이터를 모두 초기화하시겠습니까?\n(삭제 후에는 복구가 불가능합니다)`)) return;
   const data = loadData(Y,M);
@@ -598,17 +597,19 @@ function updatePrevBanners(){
   const p=prevYM(); const prevData=loadData(p.y,p.m); const prevLd=lastDay(p.y,p.m);
   let msCarryPrev=0, klCarryPrev=0, nbCarryPrev=0;
   
+  // 지급월 계산
+  const currentPayoutM = (new Date(Y, M, 7)).getMonth() + 1;
+  
   for(let d=26;d<=prevLd;d++) msCarryPrev+=parseFloat(prevData.ms[d])||0;
-  document.getElementById('prevRange_ms').textContent=`${p.m}월 26일 ~ ${p.m}월 ${prevLd}일`;
+  document.getElementById('prevRange_ms').textContent=`${p.m}월 26일~말일 이월분 ➔ ${currentPayoutM}월 7일 입금액 합산`;
   document.getElementById('prevVal_ms').textContent=msCarryPrev+'건';
 
   for(let d=21;d<=prevLd;d++) klCarryPrev+=parseFloat(prevData.kl[d])||0;
-  document.getElementById('prevRange_kl').textContent=`${p.m}월 21일 ~ ${p.m}월 ${prevLd}일`;
+  document.getElementById('prevRange_kl').textContent=`${p.m}월 21일~말일 이월분 ➔ ${currentPayoutM}월 7일 입금액 합산`;
   document.getElementById('prevVal_kl').textContent=klCarryPrev+'건';
 
-  // 뉴발란스 전월 전체 누적
   for(let d=1;d<=prevLd;d++) nbCarryPrev+=parseFloat(prevData.nb[d])||0;
-  document.getElementById('prevRange_nb').textContent=`${p.m}월 1일 ~ ${p.m}월 ${prevLd}일`;
+  document.getElementById('prevRange_nb').textContent=`${p.m}월 전체 작업분 ➔ ${currentPayoutM}월 7일 입금액 합산`;
   document.getElementById('prevVal_nb').textContent=nbCarryPrev+'건';
 }
 
@@ -620,31 +621,27 @@ function compute(){
   let msPrevCarry=0,klPrevCarry=0, nbPrevCarry=0;
   for(let d=26;d<=prevLd;d++) msPrevCarry+=parseFloat(prevData.ms[d])||0;
   for(let d=21;d<=prevLd;d++) klPrevCarry+=parseFloat(prevData.kl[d])||0;
-  for(let d=1;d<=prevLd;d++) nbPrevCarry+=parseFloat(prevData.nb[d])||0; // 뉴발 전월분
+  for(let d=1;d<=prevLd;d++) nbPrevCarry+=parseFloat(prevData.nb[d])||0;
 
   const msCurSettle=getSum('ms',1,25), msCurCarry=getSum('ms',26,max);
   const klCurSettle=getSum('kl',1,20), klCurCarry=getSum('kl',21,max);
   const nbAll=getSum('nb',1,max), otAll=getSum('ot',1,max);
 
-  // 당월 실적 총괄
   const currentMonthTotalCnt = msCurSettle + msCurCarry + klCurSettle + klCurCarry + nbAll + otAll;
   const currentMonthTotalAmt = currentMonthTotalCnt * unit;
 
-  // 당월 정산
   const msSettle=msPrevCarry+msCurSettle;
   const klSettle=klPrevCarry+klCurSettle;
-  const nbSettle=nbPrevCarry; // 전월 뉴발란스 작업분이 당월 정산됨
+  const nbSettle=nbPrevCarry; 
   const settle=msSettle+klSettle+nbSettle+otAll;
   
-  // 미수금 분리
-  const carry1 = msCurCarry + klCurCarry; // 익월 (무신사/코오롱)
-  const carry2 = nbAll; // 익익월 (뉴발란스)
+  const carry1 = msCurCarry + klCurCarry; 
+  const carry2 = nbAll; 
 
   const gross=settle*unit;
   const tax=gross*0.033;
   const dep=10000;
   
-  // 단가가 0일때 마이너스 금액 표기 방지 처리
   let net = 0;
   if(unit > 0 && gross > 0) {
     net = Math.floor(gross-tax-dep);
@@ -654,8 +651,13 @@ function compute(){
   const carryAmt1 = carry1 * unit;
   const carryAmt2 = carry2 * unit;
 
-  const nd=new Date(Y,M,7);
-  const ds=`${nd.getFullYear()}.${String(nd.getMonth()+1).padStart(2,'0')}.07`;
+  // 날짜 계산 (Date 객체를 써서 해가 넘어가는 12월 -> 1월 오류 완벽 방지)
+  const nd = new Date(Y, M, 7);
+  const ds = `${nd.getFullYear()}.${String(nd.getMonth()+1).padStart(2,'0')}.07`;
+  const currentPayoutM = nd.getMonth() + 1;
+
+  const nnd = new Date(Y, M+1, 7);
+  const nextPayoutM = nnd.getMonth() + 1;
 
   document.getElementById('rtTotalCnt').textContent=currentMonthTotalCnt.toLocaleString() + '건';
   document.getElementById('rtTotalAmt').textContent='총 ' + fmt(currentMonthTotalAmt) + '원 발생';
@@ -665,21 +667,26 @@ function compute(){
   document.getElementById('rTax').textContent=fmt(Math.floor(tax));
   document.getElementById('rDate').textContent=ds;
   
+  document.getElementById('bbTitleLabel').textContent=`${currentPayoutM}월 7일 수령 정산액 상세 구성`;
+
   document.getElementById('rCarry1').textContent=fmt(carryAmt1);
   document.getElementById('rCarry2').textContent=fmt(carryAmt2);
 
   document.getElementById('rcMs').textContent=msCurCarry+'건';
-  document.getElementById('rcMsDate').textContent=`${M}월 26일~${M}월 ${max}일`;
+  document.getElementById('rcMsDate').textContent=`${M}월 26일~말일 작업분 ➔ ${nextPayoutM}월 7일 정산`;
+  
   document.getElementById('rcKl').textContent=klCurCarry+'건';
-  document.getElementById('rcKlDate').textContent=`${M}월 21일~${M}월 ${max}일`;
+  document.getElementById('rcKlDate').textContent=`${M}월 21일~말일 작업분 ➔ ${nextPayoutM}월 7일 정산`;
+  
   document.getElementById('rcNb').textContent=nbAll+'건';
+  document.getElementById('rcNbDate').textContent=`${M}월 작업분 ➔ ${nextPayoutM}월 7일 정산 예정`;
 
   const pm=prevYM().m;
   const rows=[
-    { name:'무신사', prev:msPrevCarry>0?{cnt:msPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:msCurSettle,label:'당월 정산'}, total:msSettle, type:'s',typeLabel:'정산' },
-    { name:'코오롱', prev:klPrevCarry>0?{cnt:klPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:klCurSettle,label:'당월 정산'}, total:klSettle, type:'s',typeLabel:'정산' },
-    { name:'뉴발란스', prev:nbPrevCarry>0?{cnt:nbPrevCarry,label:`${pm}월 전액`}:null, curr:null, total:nbSettle, type:'s',typeLabel:'정산' },
-    { name:'그 외', prev:null, curr:{cnt:otAll,label:'당월 정산'}, total:otAll, type:'s',typeLabel:'정산' }
+    { name:'무신사', prev:msPrevCarry>0?{cnt:msPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:msCurSettle,label:`${M}월 정산`}, total:msSettle, type:'s',typeLabel:'정산' },
+    { name:'코오롱', prev:klPrevCarry>0?{cnt:klPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:klCurSettle,label:`${M}월 정산`}, total:klSettle, type:'s',typeLabel:'정산' },
+    { name:'뉴발란스', prev:nbPrevCarry>0?{cnt:nbPrevCarry,label:`${pm}월 작업분 전액`}:null, curr:null, total:nbSettle, type:'s',typeLabel:'정산' },
+    { name:'그 외', prev:null, curr:{cnt:otAll,label:`${M}월 정산`}, total:otAll, type:'s',typeLabel:'정산' }
   ];
 
   const bbRows=document.getElementById('bbRows'); bbRows.innerHTML='';
