@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nouema 정산 계산기 v7</title>
+<title>Nouema 정산 계산기 v8</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -44,7 +44,7 @@ body{
 .unit-iw input:focus{border-color:var(--gold)}
 .unit-sfx{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);pointer-events:none}
 
-/* ── ACTION BAR (Save, Reset, Backup) ── */
+/* ── ACTION BAR ── */
 .action-bar{display:grid;grid-template-columns:repeat(4, 1fr);gap:4px;margin-bottom:12px}
 .action-btn{display:flex;align-items:center;justify-content:center;gap:4px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:9px 0;font-size:10px;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;font-family:'Noto Sans KR',sans-serif;position:relative}
 .action-btn:hover{background:var(--s2);border-color:var(--muted)}
@@ -291,10 +291,15 @@ body{
 </div>
 
 <div class="brand-panel" id="panel_nb">
+  <div class="prev-banner" id="prevBanner_nb">
+    <div class="prev-banner-icon">🔗</div>
+    <div class="prev-banner-text">전월 작업분 당월 자동 정산 연계 <span class="prev-banner-sub" id="prevRange_nb">—</span></div>
+    <div class="prev-banner-val" id="prevVal_nb">0건</div>
+  </div>
   <div class="cal-wrap">
     <div class="cal-hdr"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
     <div class="cal-grid" id="grid_nb"></div>
-    <div class="legend"><div class="leg"><div class="lsq ac"></div>전액 익익월 이월 (당월 정산 없음)</div></div>
+    <div class="legend"><div class="leg"><div class="lsq ac"></div>당월 작업분 전액 익익월 이월 (당월 정산 없음)</div></div>
   </div>
   <div class="mini-sub one">
     <div class="ms-cell"><span class="ms-label">이월 건수 (전액)</span><div style="display:flex;align-items:center"><span class="ms-val p" id="sub_nb">0</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-left:3px">건</span></div></div>
@@ -385,7 +390,7 @@ body{
   </div>
 
 </div><div class="footer">
-  <span>Nouema © 2026 · 시스템 v7</span>
+  <span>Nouema © 2026 · 시스템 v8</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -591,7 +596,8 @@ function updateSub(brand){
 
 function updatePrevBanners(){
   const p=prevYM(); const prevData=loadData(p.y,p.m); const prevLd=lastDay(p.y,p.m);
-  let msCarryPrev=0, klCarryPrev=0;
+  let msCarryPrev=0, klCarryPrev=0, nbCarryPrev=0;
+  
   for(let d=26;d<=prevLd;d++) msCarryPrev+=parseFloat(prevData.ms[d])||0;
   document.getElementById('prevRange_ms').textContent=`${p.m}월 26일 ~ ${p.m}월 ${prevLd}일`;
   document.getElementById('prevVal_ms').textContent=msCarryPrev+'건';
@@ -599,6 +605,11 @@ function updatePrevBanners(){
   for(let d=21;d<=prevLd;d++) klCarryPrev+=parseFloat(prevData.kl[d])||0;
   document.getElementById('prevRange_kl').textContent=`${p.m}월 21일 ~ ${p.m}월 ${prevLd}일`;
   document.getElementById('prevVal_kl').textContent=klCarryPrev+'건';
+
+  // 뉴발란스 전월 전체 누적
+  for(let d=1;d<=prevLd;d++) nbCarryPrev+=parseFloat(prevData.nb[d])||0;
+  document.getElementById('prevRange_nb').textContent=`${p.m}월 1일 ~ ${p.m}월 ${prevLd}일`;
+  document.getElementById('prevVal_nb').textContent=nbCarryPrev+'건';
 }
 
 function compute(){
@@ -606,9 +617,10 @@ function compute(){
   const max=ld();
   const p=prevYM(); const prevData=loadData(p.y,p.m); const prevLd=lastDay(p.y,p.m);
 
-  let msPrevCarry=0,klPrevCarry=0;
+  let msPrevCarry=0,klPrevCarry=0, nbPrevCarry=0;
   for(let d=26;d<=prevLd;d++) msPrevCarry+=parseFloat(prevData.ms[d])||0;
   for(let d=21;d<=prevLd;d++) klPrevCarry+=parseFloat(prevData.kl[d])||0;
+  for(let d=1;d<=prevLd;d++) nbPrevCarry+=parseFloat(prevData.nb[d])||0; // 뉴발 전월분
 
   const msCurSettle=getSum('ms',1,25), msCurCarry=getSum('ms',26,max);
   const klCurSettle=getSum('kl',1,20), klCurCarry=getSum('kl',21,max);
@@ -621,7 +633,8 @@ function compute(){
   // 당월 정산
   const msSettle=msPrevCarry+msCurSettle;
   const klSettle=klPrevCarry+klCurSettle;
-  const settle=msSettle+klSettle+otAll;
+  const nbSettle=nbPrevCarry; // 전월 뉴발란스 작업분이 당월 정산됨
+  const settle=msSettle+klSettle+nbSettle+otAll;
   
   // 미수금 분리
   const carry1 = msCurCarry + klCurCarry; // 익월 (무신사/코오롱)
@@ -633,8 +646,9 @@ function compute(){
   
   // 단가가 0일때 마이너스 금액 표기 방지 처리
   let net = 0;
-  if(unit > 0) {
+  if(unit > 0 && gross > 0) {
     net = Math.floor(gross-tax-dep);
+    if(net < 0) net = 0;
   }
 
   const carryAmt1 = carry1 * unit;
@@ -664,6 +678,7 @@ function compute(){
   const rows=[
     { name:'무신사', prev:msPrevCarry>0?{cnt:msPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:msCurSettle,label:'당월 정산'}, total:msSettle, type:'s',typeLabel:'정산' },
     { name:'코오롱', prev:klPrevCarry>0?{cnt:klPrevCarry,label:`${pm}월 이월`}:null, curr:{cnt:klCurSettle,label:'당월 정산'}, total:klSettle, type:'s',typeLabel:'정산' },
+    { name:'뉴발란스', prev:nbPrevCarry>0?{cnt:nbPrevCarry,label:`${pm}월 전액`}:null, curr:null, total:nbSettle, type:'s',typeLabel:'정산' },
     { name:'그 외', prev:null, curr:{cnt:otAll,label:'당월 정산'}, total:otAll, type:'s',typeLabel:'정산' }
   ];
 
@@ -672,9 +687,10 @@ function compute(){
     if(r.total===0 && !r.prev) return;
     const row=document.createElement('div'); row.className='bb-row';
     let detailHtml='';
-    if(r.prev) detailHtml+=`<span class="bb-prev">${r.prev.label} ${r.prev.cnt}건</span><span class="bb-plus">+</span>`;
-    detailHtml+=`<span class="bb-curr">${r.curr.label} ${r.curr.cnt}건</span>`;
-    if(r.prev) detailHtml+=`<span class="bb-eq">=</span>`;
+    if(r.prev) detailHtml+=`<span class="bb-prev">${r.prev.label} ${r.prev.cnt}건</span>`;
+    if(r.prev && r.curr) detailHtml+=`<span class="bb-plus">+</span>`;
+    if(r.curr) detailHtml+=`<span class="bb-curr">${r.curr.label} ${r.curr.cnt}건</span>`;
+    if(r.prev && r.curr) detailHtml+=`<span class="bb-eq">=</span>`;
     row.innerHTML=`<div class="bb-name">${r.name}</div><div class="bb-detail">${detailHtml}<span class="bb-total">${r.total}건</span><span class="bb-type ${r.type}">${r.typeLabel}</span></div>`;
     bbRows.appendChild(row);
   });
