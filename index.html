@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nouema 정산 계산기 v9 (Dynamic Engine)</title>
+<title>Nouema 정산 계산기 v9.1 (UI 복구 완료)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -135,8 +135,8 @@ body{
 /* dynamic income blocks */
 .payout-block{border-bottom:1px solid var(--border)}
 .res-income{padding:20px 18px;background:linear-gradient(135deg,rgba(52,211,153,.06) 0%,transparent 60%)}
-.res-carry{padding:16px 18px;background:linear-gradient(135deg,rgba(240,180,41,.04) 0%,transparent 60%)}
-.res-future{padding:16px 18px;background:linear-gradient(135deg,rgba(167,139,250,.06) 0%,transparent 60%)}
+.res-carry{padding:16px 18px;background:linear-gradient(135deg,rgba(240,180,41,.04) 0%,transparent 60%);border-bottom:1px solid var(--border)}
+.res-future{padding:16px 18px;background:linear-gradient(135deg,rgba(167,139,250,.06) 0%,transparent 60%);border-bottom:none}
 
 .ri-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .ri-badge{font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;border-radius:20px;letter-spacing:.08em}
@@ -151,6 +151,18 @@ body{
 .ri-unit{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:4px}
 .ri-calc{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.02em;margin-top:2px}
 .ri-calc span{color:var(--text)}
+
+/* BRAND CARDS (RESTORED CSS) */
+.rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rc-main{display:flex;align-items:flex-end;gap:8px;margin-bottom:6px}
+.rc-amount{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1}
+.rc-unit{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:3px}
+.rc-rows{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px}
+.rc-cell{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:9px 11px}
+.rc-cell-lbl{font-size:9px;color:var(--muted);margin-bottom:4px;letter-spacing:.03em}
+.rc-cell-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--orange)}
+.rc-cell-val.nb{color:var(--purple)}
+.rc-cell-date{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:2px}
 
 .brand-breakdown{padding:0 18px 14px 18px;}
 .bb-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
@@ -193,7 +205,7 @@ body{
   <div>
     <div class="hdr-eye">배송 정산 시스템</div>
     <div class="hdr-title">Nouema CALC</div>
-    <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 · 동적 정산 엔진</div>
+    <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 · 동적 정산 엔진 UI복구완료</div>
   </div>
   <div class="month-pick">
     <button class="mp-arr" onclick="changeMonth(-1)">&#8592;</button>
@@ -252,7 +264,7 @@ body{
 </div>
 
 <div class="footer">
-  <span>Nouema © 2026 · 시스템 v9</span>
+  <span>Nouema © 2026 · 시스템 v9.1</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -310,7 +322,6 @@ let Y = new Date().getFullYear();
 let M = new Date().getMonth() + 1;
 let saveTimer = {};
 
-// 초기 호환성을 위한 기본 데이터 (기존 v8과 동일 조건)
 const DEFAULT_CLIENTS = [
   { id:'ms', name:'무신사', cutoff:25, offset:1, payoutDay:7, color:'c_green' },
   { id:'kl', name:'코오롱', cutoff:20, offset:1, payoutDay:7, color:'c_blue' },
@@ -331,19 +342,14 @@ function prevYM(){return M===1?{y:Y-1,m:12}:{y:Y,m:M-1}}
 function fmt(n){return Math.floor(n).toLocaleString('ko-KR')}
 function ld(){return lastDay(Y,M)}
 
-// 날짜 기준 정산일 계산 함수 (가장 핵심)
 function getPayoutDate(workY, workM, workD, client) {
     let targetM = workM;
-    // 마감일을 넘겼다면 (단, 말일(31) 마감이 아닐경우) 다음 사이클
-    if (client.cutoff < 31 && workD > client.cutoff) {
-        targetM += 1;
-    }
+    if (client.cutoff < 31 && workD > client.cutoff) targetM += 1;
     let payM = targetM + parseInt(client.offset);
     let payY = workY;
     while(payM > 12) { payM -= 12; payY++; }
     return { y: payY, m: payM, d: parseInt(client.payoutDay) };
 }
-
 function getPayoutKey(dObj) {
     return `${dObj.y}-${String(dObj.m).padStart(2,'0')}-${String(dObj.d).padStart(2,'0')}`;
 }
@@ -385,7 +391,6 @@ function resetMonth() {
   localStorage.setItem(storageKey(Y,M), JSON.stringify(data));
   render(); showToast(`${M}월 데이터가 모두 초기화되었습니다.`);
 }
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -408,19 +413,14 @@ function changeMonth(d){
 }
 
 function renderUIStructure() {
-    // 엑셀 가이드 텍스트 업데이트
     const gText = ['날짜(A)'].concat(clients.map((c, i) => `${c.name}(${String.fromCharCode(66+i)})`)).join(' · ');
     document.getElementById('xlGuideTxt').textContent = gText;
 
-    // Tabs 생성
-    const tabsContainer = document.getElementById('dynamicTabs');
-    tabsContainer.innerHTML = clients.map(c => 
+    document.getElementById('dynamicTabs').innerHTML = clients.map(c => 
         `<button class="tab-btn ${c.id===activeTab?'active':''}" onclick="showTab('${c.id}')"><span class="tdot ${c.color}"></span>${c.name}</button>`
     ).join('');
 
-    // Panels 생성
-    const panelsContainer = document.getElementById('dynamicPanels');
-    panelsContainer.innerHTML = clients.map(c => {
+    document.getElementById('dynamicPanels').innerHTML = clients.map(c => {
         const isCutoff = c.cutoff < 31;
         const legendHtml = isCutoff ? 
             `<div class="legend"><div class="leg"><div class="lsq s"></div>정산 (1~${c.cutoff}일)</div><div class="leg"><div class="lsq c"></div>이월 (${c.cutoff+1}~말일)</div></div>` : 
@@ -495,7 +495,6 @@ function buildGrid(client){
       inp.dataset.day=day;
       inp.value=data[client.id][day]||'';
       
-      // 마감일 기준 컬러 하이라이팅
       if(client.cutoff < 31) {
           cell.classList.add(day <= client.cutoff ? 'settle' : 'carry-c');
       } else {
@@ -567,7 +566,7 @@ function updatePrevBanner(client){
 }
 
 // ──────────────────────────
-// DYNAMIC COMPUTATION ENGINE
+// DYNAMIC COMPUTATION (UI MATCHED)
 // ──────────────────────────
 function compute(){
   const unit = parseFloat(document.getElementById('unitPrice').value)||0;
@@ -578,18 +577,14 @@ function compute(){
   const prevLd = lastDay(p.y,p.m);
 
   let totalCurCnt = 0;
-  
-  // 지급일 기준 버킷 { "YYYY-MM-DD": { items: [], totalCnt: 0 } }
   let payouts = {};
 
   clients.forEach(c => {
-      // 1. 당월 작업 합산
       const curSum = getSum(c.id, 1, max);
       totalCurCnt += curSum;
 
-      // 2. 전월 데이터 중 이월된 부분 (M-1)
+      // 과거 전월 데이터 (이월분) 합산
       const startDay = c.cutoff < 31 ? c.cutoff + 1 : 1;
-      // offset이 0인 경우(당월정산) 전월 이월이 존재하지 않음.
       if (c.offset > 0 || c.cutoff < 31) {
           for(let d=startDay; d<=prevLd; d++) {
               let qty = parseFloat(prevData[c.id]?.[d]) || 0;
@@ -597,8 +592,6 @@ function compute(){
                   let payDate = getPayoutDate(p.y, p.m, d, c);
                   let pKey = getPayoutKey(payDate);
                   if(!payouts[pKey]) payouts[pKey] = { date: payDate, items: [], totalCnt: 0 };
-                  
-                  // 중복 클라이언트 합산
                   let exist = payouts[pKey].items.find(i => i.id === c.id);
                   if(exist) exist.cnt += qty;
                   else payouts[pKey].items.push({ id: c.id, name: c.name, type: '전월 이월', cnt: qty });
@@ -607,7 +600,7 @@ function compute(){
           }
       }
 
-      // 3. 당월 데이터 분류 (M)
+      // 당월 데이터 합산
       for(let d=1; d<=max; d++) {
           let qty = parseFloat(curData[c.id]?.[d]) || 0;
           if (qty > 0) {
@@ -615,7 +608,7 @@ function compute(){
               let pKey = getPayoutKey(payDate);
               if(!payouts[pKey]) payouts[pKey] = { date: payDate, items: [], totalCnt: 0 };
               
-              let typeLabel = d <= c.cutoff ? '당월 정산' : '당월 이월(작업)';
+              let typeLabel = d <= c.cutoff ? '당월 정산' : '당월 작업분 이월';
               if(c.cutoff === 31 && c.offset > 0) typeLabel = '당월 전체 이월';
               
               let exist = payouts[pKey].items.find(i => i.id === c.id && i.type === typeLabel);
@@ -626,89 +619,148 @@ function compute(){
       }
   });
 
-  // 상단 그랜드 토탈
+  // 1. 그랜드 토탈
   document.getElementById('rtTotalCnt').textContent = totalCurCnt.toLocaleString() + '건';
   document.getElementById('rtTotalAmt').textContent = '총 ' + fmt(totalCurCnt * unit) + '원 발생';
 
-  // 버킷 정렬 (날짜순)
-  let sortedKeys = Object.keys(payouts).sort((a,b) => new Date(a) - new Date(b));
-  
   const wrap = document.getElementById('dynamicPayouts');
   wrap.innerHTML = '';
 
-  let isFirst = true;
-
-  sortedKeys.forEach(key => {
-      let b = payouts[key];
-      let gross = b.totalCnt * unit;
-      if(gross === 0) return;
-
-      // 뷰잉월(Y, M) 대비 정산시기 판단
-      let dObj = b.date;
-      let monthDiff = (dObj.y - Y) * 12 + (dObj.m - M);
-      
-      let badgeTxt, badgeCls, amtCls, wrapCls;
-      if (monthDiff === 0) {
-          badgeTxt = "당월 수령 (정산분)"; badgeCls = "badge-s"; amtCls = "amt-s"; wrapCls = "res-income";
-      } else if (monthDiff === 1) {
-          badgeTxt = "익월 수령 (정산분)"; badgeCls = "badge-s"; amtCls = "amt-s"; wrapCls = "res-income";
-      } else if (monthDiff === 2) {
-          badgeTxt = "다다음달 수령 (이월 미수금)"; badgeCls = "badge-c"; amtCls = "amt-c"; wrapCls = "res-carry";
-      } else {
-          badgeTxt = `${dObj.m}월 수령 (장기 이월)`; badgeCls = "badge-f"; amtCls = "amt-f"; wrapCls = "res-future";
-      }
-
-      // 첫 번째 블록(가장 가까운 정산)에만 세금/보증금 표시
-      let tax = 0, dep = 0, net = gross;
-      let calcHtml = '';
-      if (isFirst && unit > 0) {
-          tax = gross * 0.033;
-          dep = 10000;
-          net = Math.floor(gross - tax - dep);
-          if (net < 0) net = 0;
-          calcHtml = `
-            <div class="ri-calc">
-              세전 <span>${fmt(gross)}</span>원 &nbsp;−&nbsp; 세금 3.3% <span>${fmt(Math.floor(tax))}</span>원 &nbsp;−&nbsp; 보증금 <span>10,000</span>원
-            </div>`;
-          isFirst = false;
-      }
-
-      // 상세 구성 HTML
-      let detailHtml = b.items.map(item => {
-          return `
-          <div class="bb-row">
-            <div class="bb-name">${item.name}</div>
-            <div class="bb-detail">
-              <span class="bb-txt">${item.type}</span>
-              <span class="bb-total">${item.cnt}건</span>
-            </div>
-          </div>`;
-      }).join('');
-
-      let blockHtml = `
-      <div class="payout-block">
-          <div class="${wrapCls}">
-            <div class="ri-top">
-              <div class="ri-badge ${badgeCls}">${badgeTxt}</div>
-              <div class="ri-date">${dObj.y}.${String(dObj.m).padStart(2,'0')}.${String(dObj.d).padStart(2,'0')}</div>
-            </div>
-            <div class="ri-main">
-              <div class="ri-amount ${amtCls}">${fmt(net)}</div>
-              <div class="ri-unit">원</div>
-            </div>
-            ${calcHtml}
-          </div>
-          <div class="brand-breakdown">
-            <div class="bb-title">상세 건수 구성</div>
-            ${detailHtml}
-          </div>
-      </div>`;
-      
-      wrap.innerHTML += blockHtml;
+  // 2. 녹색 블록: 당/익월 수령 예정인 금액 (정산분)
+  let sortedKeys = Object.keys(payouts).sort((a,b) => new Date(a) - new Date(b));
+  let immediateKeys = sortedKeys.filter(k => {
+      let dObj = payouts[k].date;
+      return ((dObj.y - Y) * 12 + (dObj.m - M)) <= 1; 
   });
 
-  if(sortedKeys.length === 0) {
-      wrap.innerHTML = `<div style="padding:30px; text-align:center; color:var(--muted); font-size:12px;">입력된 실적이 없습니다.</div>`;
+  if (immediateKeys.length === 0) {
+      let nd = new Date(Y, M, 7); 
+      wrap.innerHTML += `
+      <div class="payout-block">
+        <div class="res-income">
+          <div class="ri-top">
+            <div class="ri-badge badge-s">익월 수령 예정 (정산분)</div>
+            <div class="ri-date">${nd.getFullYear()}.${String(nd.getMonth()+1).padStart(2,'0')}.07</div>
+          </div>
+          <div class="ri-main">
+            <div class="ri-amount amt-s">0</div>
+            <div class="ri-unit">원</div>
+          </div>
+          <div class="ri-calc">세전 <span>0</span>원 &nbsp;−&nbsp; 세금 3.3% <span>0</span>원 &nbsp;−&nbsp; 보증금 <span>10,000</span>원</div>
+        </div>
+        <div class="brand-breakdown">
+          <div class="bb-title">당월 수령 정산액 상세 구성</div>
+          <div style="text-align:center; color:var(--muted); font-size:11px; padding:10px;">정산 대상 없음</div>
+        </div>
+      </div>`;
+  } else {
+      immediateKeys.forEach((key, idx) => {
+          let b = payouts[key];
+          let gross = b.totalCnt * unit;
+          let dObj = b.date;
+          
+          let tax = 0, dep = 0, net = gross;
+          let calcHtml = '';
+          if (idx === 0 && unit > 0) { 
+              tax = gross * 0.033; dep = 10000; net = Math.floor(gross - tax - dep);
+              if (net < 0) net = 0;
+              calcHtml = `<div class="ri-calc">세전 <span>${fmt(gross)}</span>원 &nbsp;−&nbsp; 세금 3.3% <span>${fmt(Math.floor(tax))}</span>원 &nbsp;−&nbsp; 보증금 <span>10,000</span>원</div>`;
+          } else {
+              calcHtml = `<div class="ri-calc">세전 <span>${fmt(gross)}</span>원</div>`;
+          }
+
+          let detailHtml = b.items.map(item => `
+          <div class="bb-row">
+            <div class="bb-name">${item.name}</div>
+            <div class="bb-detail"><span class="bb-txt">${item.type}</span><span class="bb-total">${item.cnt}건</span></div>
+          </div>`).join('');
+
+          wrap.innerHTML += `
+          <div class="payout-block">
+            <div class="res-income">
+              <div class="ri-top">
+                <div class="ri-badge badge-s">${dObj.m}월 수령 예정 (정산분)</div>
+                <div class="ri-date">${dObj.y}.${String(dObj.m).padStart(2,'0')}.${String(dObj.d).padStart(2,'0')}</div>
+              </div>
+              <div class="ri-main">
+                <div class="ri-amount amt-s">${fmt(net)}</div>
+                <div class="ri-unit">원</div>
+              </div>
+              ${calcHtml}
+            </div>
+            <div class="brand-breakdown">
+              <div class="bb-title">${dObj.m}월 수령 정산액 상세 구성</div>
+              ${detailHtml}
+            </div>
+          </div>`;
+      });
+  }
+
+  // 3. 골드 박스 & 퍼플 박스 복원 (카드형 UI)
+  let carry1Amt = 0; let carry1Html = '';
+  let carry2Amt = 0; let carry2Html = '';
+
+  clients.forEach(c => {
+      // 마감일 있는 거래처 (부분 이월) -> 골드 카드
+      if (c.cutoff < 31) {
+          let cnt = getSum(c.id, c.cutoff + 1, max);
+          carry1Amt += cnt * unit;
+          let expDate = getPayoutDate(Y, M, c.cutoff + 1, c);
+          carry1Html += `
+          <div class="rc-cell">
+            <div class="rc-cell-lbl">${c.name} 이월</div>
+            <div class="rc-cell-val" style="color:var(--orange);">${cnt}건</div>
+            <div class="rc-cell-date">${M}월 ${c.cutoff+1}일~말일 작업분 → ${expDate.m}월 ${expDate.d}일 정산</div>
+          </div>`;
+      } 
+      // 당월 전체가 이월되는 거래처 (전체 이월) -> 퍼플 카드
+      else if (c.offset >= 2 && c.cutoff === 31) {
+          let cnt = getSum(c.id, 1, max);
+          carry2Amt += cnt * unit;
+          let expDate = getPayoutDate(Y, M, 1, c);
+          carry2Html += `
+          <div class="rc-cell">
+            <div class="rc-cell-lbl">${c.name} 당월 전체 이월분</div>
+            <div class="rc-cell-val nb">${cnt}건</div>
+            <div class="rc-cell-date">${M}월 작업분 → ${expDate.m}월 ${expDate.d}일 정산 예정</div>
+          </div>`;
+      }
+  });
+
+  if(carry1Html) {
+      wrap.innerHTML += `
+      <div class="res-carry">
+        <div class="rc-top">
+          <div class="rc-badge badge-c">다음달 이월 미수금 (미정산 잔여 미수금)</div>
+        </div>
+        <div class="rc-main">
+          <div class="rc-amount amt-c">${fmt(carry1Amt)}</div>
+          <div class="rc-unit">원</div>
+        </div>
+        <div class="rc-rows">
+          ${carry1Html}
+        </div>
+      </div>`;
+  }
+
+  if(carry2Html) {
+      // 거래처가 1개면 1fr, 2개 이상이면 2칸으로 쪼개지도록 동적 CSS
+      let c2Count = (carry2Html.match(/rc-cell/g) || []).length;
+      let gridStyle = c2Count === 1 ? 'grid-template-columns:1fr;' : '';
+      
+      wrap.innerHTML += `
+      <div class="res-carry res-future">
+        <div class="rc-top">
+          <div class="rc-badge badge-f">다다음달(익익월) 미정산 잔여 미수금</div>
+        </div>
+        <div class="rc-main">
+          <div class="rc-amount amt-f">${fmt(carry2Amt)}</div>
+          <div class="rc-unit">원</div>
+        </div>
+        <div class="rc-rows" style="${gridStyle}">
+          ${carry2Html}
+        </div>
+      </div>`;
   }
 }
 
@@ -803,7 +855,6 @@ function importBackup(e) {
         }
       }
       if (count > 0) {
-        // 복원 후 클라이언트 동기화
         const cData = localStorage.getItem('nouema_v9_clients');
         if(cData) clients = JSON.parse(cData);
         renderUIStructure();
@@ -820,10 +871,10 @@ function handleFile(e){
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const wb=XLSX.read(ev.target.result,{type:'binary',cellDates:true});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      parseRows(rows,file.name);
+        const wb=XLSX.read(ev.target.result,{type:'binary',cellDates:true});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        parseRows(rows,file.name);
     }catch(err){setXlStatus('파일 읽기 실패',false)}
   };
   reader.readAsBinaryString(file); e.target.value='';
@@ -835,7 +886,6 @@ function parseRows(rows,fname){
   for(let r=1;r<rows.length;r++){
     const row=rows[r];if(!row[0])continue;
     const day=parseDay(row[0]);if(!day||day<1||day>ld())continue;
-    // B열부터 등록된 클라이언트 순서대로 매핑
     clients.forEach((c, i) => {
       const qty=parseFloat(row[i+1])||0;
       if(qty>0){
@@ -855,16 +905,13 @@ function parseDay(val){
   const s=String(val).trim(); const m2=s.match(/\d{4}[-\/]\d{1,2}[-\/](\d{1,2})/); const m3=s.match(/^(\d{1,2})[일]?$/);
   if(m2)return parseInt(m2[1]);if(m3)return parseInt(m3[1]);return null;
 }
-
 function setXlStatus(msg,ok){
   const el=document.getElementById('xlStatus');
   el.textContent=msg;el.className='xl-status '+(ok?'ok':'err');
 }
-
 function dlTemplate(e){
   e.preventDefault();e.stopPropagation();
   const wb=XLSX.utils.book_new(); const maxDay=ld();
-  // 동적 헤더 생성
   const headers = ['날짜'].concat(clients.map(c => c.name));
   const ws1=[headers];
   for(let d=1;d<=maxDay;d++){
@@ -873,7 +920,6 @@ function dlTemplate(e){
       ws1.push(row);
   }
   const ws=XLSX.utils.aoa_to_sheet(ws1); 
-  // 열 너비 동적 설정
   ws['!cols'] = [{wch:14}].concat(clients.map(() => ({wch:12})));
   XLSX.utils.book_append_sheet(wb,ws,'입력서식');
   XLSX.writeFile(wb,`Nouema_동적입력서식_${Y}${String(M).padStart(2,'0')}.xlsx`);
