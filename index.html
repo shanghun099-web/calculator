@@ -183,8 +183,16 @@ body{
 .m-group select{font-family:var(--fn-sans);font-size:12px}
 .m-group input:focus,.m-group select:focus{border-color:var(--gold)}
 .client-list{margin-top:20px;border-top:1px solid var(--border);padding-top:15px}
-.c-item{display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--s2);border:1px solid var(--border);margin-bottom:5px;border-radius:4px;font-family:var(--fn-sans);font-size:11px}
-.c-item-del{color:var(--red);cursor:pointer;background:none;border:none;font-family:var(--fn-sans);font-size:11px;font-weight:600}
+/* 모달 거래처 목록 버튼 스타일 (기존 .c-item-del 대체) */
+.c-item {display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--s2);border:1px solid var(--border);margin-bottom:5px;border-radius:4px;font-family:var(--fn-sans);font-size:11px}
+.c-item-actions {display:flex;gap:4px;align-items:center}
+.c-item-btn {cursor:pointer;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-family:var(--fn-sans);font-size:10px;font-weight:600;padding:4px 6px;color:var(--text);transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.c-item-btn:hover {background:var(--s3)}
+.c-item-btn.move {color:var(--muted);padding:4px}
+.c-item-btn.edit {color:var(--blue);border-color:rgba(96,165,250,.3)}
+.c-item-btn.del {color:var(--red);border-color:rgba(248,113,113,.3)}
+.c-item-btn:disabled {opacity:0.3;cursor:not-allowed}
+
 .modal-btns{display:flex;gap:10px;margin-top:15px}
 .modal-btns button{flex:1;padding:10px;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-family:var(--fn-sans);font-size:13px}
 .btn-close{background:var(--s3);color:var(--text)}
@@ -318,6 +326,7 @@ body{
 let Y = new Date().getFullYear();
 let M = new Date().getMonth() + 1;
 let saveTimer = {};
+let editingIndex = -1; // [추가됨] 현재 수정 중인 거래처의 인덱스를 저장 (-1이면 새 거래처 추가 상태)
 
 const DEFAULT_CLIENTS = [
   { id:'ms', name:'무신사', cutoff:25, offset:1, payoutDay:7, color:'c_green' },
@@ -714,16 +723,71 @@ function compute(){
   }
 }
 
-function openModal() { renderModalList(); document.getElementById('clientModal').classList.add('show'); }
-function closeModal() { document.getElementById('clientModal').classList.remove('show'); }
+// 모달 및 거래처 관리 관련 함수들
+function openModal() { 
+    editingIndex = -1; 
+    resetModalInputs();
+    renderModalList(); 
+    document.getElementById('clientModal').classList.add('show'); 
+}
+
+function closeModal() { 
+    document.getElementById('clientModal').classList.remove('show'); 
+    resetModalInputs();
+}
+
+function resetModalInputs() {
+    editingIndex = -1;
+    document.getElementById('mName').value = ''; 
+    document.getElementById('mCutoff').value = '';
+    document.getElementById('mPayout').value = '';
+    
+    const addBtn = document.querySelector('.btn-add');
+    addBtn.textContent = '+ 추가하기';
+    addBtn.style.background = 'var(--gold)';
+    addBtn.style.color = '#000';
+}
+
 function renderModalList() {
     document.getElementById('modalClientList').innerHTML = clients.map((c, i) => `
         <div class="c-item">
             <div><span class="tdot ${c.color}"></span> <strong>${c.name}</strong> <span style="color:var(--muted)">(${c.cutoff}일 마감 / +${c.offset}월 ${c.payoutDay}일)</span></div>
-            ${clients.length > 1 ? `<button class="c-item-del" onclick="deleteClient(${i})">삭제</button>` : ''}
+            <div class="c-item-actions">
+                ${clients.length > 1 ? `
+                <button class="c-item-btn move" onclick="moveClient(${i}, -1)" ${i === 0 ? 'disabled' : ''}>▲</button>
+                <button class="c-item-btn move" onclick="moveClient(${i}, 1)" ${i === clients.length - 1 ? 'disabled' : ''}>▼</button>
+                ` : ''}
+                <button class="c-item-btn edit" onclick="editClient(${i})">수정</button>
+                ${clients.length > 1 ? `<button class="c-item-btn del" onclick="deleteClient(${i})">삭제</button>` : ''}
+            </div>
         </div>
     `).join('');
 }
+
+function moveClient(idx, dir) {
+    if (idx + dir < 0 || idx + dir >= clients.length) return;
+    const temp = clients[idx];
+    clients[idx] = clients[idx + dir];
+    clients[idx + dir] = temp;
+    localStorage.setItem('nouema_v9_clients', JSON.stringify(clients));
+    renderUIStructure(); render(); renderModalList();
+}
+
+function editClient(idx) {
+    editingIndex = idx;
+    const c = clients[idx];
+    document.getElementById('mName').value = c.name;
+    document.getElementById('mCutoff').value = c.cutoff;
+    document.getElementById('mOffset').value = c.offset;
+    document.getElementById('mPayout').value = c.payoutDay;
+    document.getElementById('mColor').value = c.color;
+
+    const addBtn = document.querySelector('.btn-add');
+    addBtn.textContent = '✓ 수정 완료';
+    addBtn.style.background = 'var(--blue)';
+    addBtn.style.color = '#fff';
+}
+
 function addClient() {
     const name = document.getElementById('mName').value;
     const cutoff = document.getElementById('mCutoff').value || 31;
@@ -731,16 +795,31 @@ function addClient() {
     const payout = document.getElementById('mPayout').value;
     const color = document.getElementById('mColor').value;
     if(!name || !payout) return alert('거래처 이름과 지급일을 입력해주세요.');
-    clients.push({ id: 'c_' + Date.now(), name, cutoff: parseInt(cutoff), offset: parseInt(offset), payoutDay: parseInt(payout), color });
+
+    if (editingIndex > -1) {
+        clients[editingIndex].name = name;
+        clients[editingIndex].cutoff = parseInt(cutoff);
+        clients[editingIndex].offset = parseInt(offset);
+        clients[editingIndex].payoutDay = parseInt(payout);
+        clients[editingIndex].color = color;
+    } else {
+        clients.push({ id: 'c_' + Date.now(), name, cutoff: parseInt(cutoff), offset: parseInt(offset), payoutDay: parseInt(payout), color });
+    }
+
     localStorage.setItem('nouema_v9_clients', JSON.stringify(clients));
+    resetModalInputs(); 
     renderUIStructure(); render(); renderModalList();
-    document.getElementById('mName').value = ''; document.getElementById('mPayout').value = '';
 }
+
 function deleteClient(idx) {
     if(!confirm(`[${clients[idx].name}] 거래처를 삭제하시겠습니까?`)) return;
     clients.splice(idx, 1);
     localStorage.setItem('nouema_v9_clients', JSON.stringify(clients));
-    activeTab = clients[0].id;
+    
+    const exists = clients.find(c => c.id === activeTab);
+    if (!exists && clients.length > 0) activeTab = clients[0].id;
+    
+    resetModalInputs();
     renderUIStructure(); render(); renderModalList();
 }
 
