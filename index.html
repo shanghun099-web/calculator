@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nouema 정산 계산기 v9.2</title>
+<title>Nouema 정산 계산기 v9.3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -27,8 +27,6 @@ body{
   background-image:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(240,180,41,.05),transparent);
 }
 .wrap{max-width:560px;margin:0 auto}
-
-/* ── HEADER ── */
 .hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)}
 .hdr-eye{font-family:var(--fn-mono);font-size:9px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:3px}
 .hdr-title{font-family:var(--fn-display);font-size:34px;letter-spacing:.06em;line-height:1}
@@ -37,8 +35,6 @@ body{
 .mp-arr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;transition:color .15s;padding:1px 4px;font-family:var(--fn-sans)}
 .mp-arr:hover{color:var(--gold)}
 .mp-val{font-family:var(--fn-mono);font-size:12px;min-width:56px;text-align:center;letter-spacing:.04em}
-
-/* ── UNIT ── */
 .unit-box{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:4px;padding:11px 15px;margin-bottom:12px}
 .unit-lbl{font-family:var(--fn-sans);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;line-height:1.6;font-weight:500}
 .unit-iw{flex:1;position:relative}
@@ -46,8 +42,6 @@ body{
 .unit-iw input::-webkit-inner-spin-button,.unit-iw input::-webkit-outer-spin-button{-webkit-appearance:none}
 .unit-iw input:focus{border-color:var(--gold)}
 .unit-sfx{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-family:var(--fn-mono);font-size:10px;color:var(--muted);pointer-events:none}
-
-/* ── ACTION BAR ── */
 .action-bar{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;margin-bottom:12px}
 .action-btn{display:flex;align-items:center;justify-content:center;gap:4px;background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:9px 0;font-size:10px;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;font-family:var(--fn-sans);font-weight:500;position:relative;letter-spacing:-.01em}
 .action-btn:hover{background:var(--s2);border-color:var(--muted)}
@@ -58,8 +52,6 @@ body{
 .action-btn.reset{color:var(--red);border-color:rgba(248,113,113,.3)}
 .action-btn.reset:hover{background:rgba(248,113,113,.1)}
 .action-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-
-/* ── EXCEL ZONE ── */
 .xl-zone{border:1px dashed var(--border2);border-radius:4px;padding:11px 14px;margin-bottom:12px;cursor:pointer;transition:border-color .2s,background .2s;position:relative}
 .xl-zone:hover,.xl-zone.drag{border-color:var(--blue);background:rgba(96,165,250,.04)}
 .xl-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
@@ -74,15 +66,11 @@ body{
 .xl-status{margin-top:7px;font-family:var(--fn-mono);font-size:9px;padding:5px 10px;border-radius:3px;display:none}
 .xl-status.ok{display:block;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2)}
 .xl-status.err{display:block;color:var(--red);background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2)}
-
-/* ── TABS ── */
 .tabs{display:flex;gap:3px;background:var(--s1);border:1px solid var(--border);border-bottom:none;border-radius:4px 4px 0 0;padding:5px 5px 0;overflow-x:auto}
 .tab-btn{font-family:var(--fn-sans);font-size:11px;font-weight:600;padding:7px 13px;border:none;border-radius:3px 3px 0 0;cursor:pointer;background:transparent;color:var(--muted);white-space:nowrap;letter-spacing:-.01em;border-bottom:2px solid transparent;transition:color .15s}
 .tab-btn.active{background:var(--bg);color:var(--text);border-bottom:2px solid var(--gold)}
 .tdot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:5px;vertical-align:middle}
 .tdot.c_green{background:var(--green)}.tdot.c_blue{background:var(--blue)}.tdot.c_orange{background:var(--orange)}.tdot.c_purple{background:var(--purple)}.tdot.c_muted{background:var(--muted)}
-
-/* ── PANEL ── */
 .brand-panel{display:none;background:var(--s1);border:1px solid var(--border);border-radius:0 4px 4px 4px;overflow:hidden;margin-bottom:12px}
 .brand-panel.active{display:block}
 .prev-banner{display:flex;align-items:center;gap:10px;padding:9px 14px;background:rgba(240,180,41,.06);border-bottom:1px solid var(--border)}
@@ -90,8 +78,6 @@ body{
 .prev-banner-text{font-family:var(--fn-sans);font-size:10px;color:var(--gold);flex:1;line-height:1.5;font-weight:500}
 .prev-banner-val{font-family:var(--fn-mono);font-size:13px;color:var(--gold);font-weight:500}
 .prev-banner-sub{font-family:var(--fn-mono);font-size:8px;color:var(--muted);display:block;margin-top:1px}
-
-/* calendar */
 .cal-wrap{padding:11px 12px 0}
 .cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
 .cal-hdr span{text-align:center;font-family:var(--fn-sans);font-size:9px;color:var(--muted);font-weight:500}
@@ -107,16 +93,12 @@ body{
 .cc.carry-c input{border-color:rgba(224,123,57,.3);background:rgba(224,123,57,.04)}
 .cc.carry-c input:focus{border-color:var(--orange)}
 .cc.all-carry input{border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.04)}
-
-/* legend */
 .legend{display:flex;gap:10px;padding:9px 12px;flex-wrap:wrap}
 .leg{display:flex;align-items:center;gap:4px;font-family:var(--fn-sans);font-size:9px;color:var(--muted)}
 .lsq{width:9px;height:9px;border-radius:2px;border:1px solid}
 .lsq.s{border-color:var(--green);background:rgba(52,211,153,.2)}
 .lsq.c{border-color:var(--orange);background:rgba(224,123,57,.2)}
 .lsq.ac{border-color:var(--purple);background:rgba(167,139,250,.2)}
-
-/* mini sub */
 .mini-sub{display:grid;gap:1px;background:var(--border);border-top:1px solid var(--border);margin-top:10px}
 .mini-sub.two{grid-template-columns:1fr 1fr}
 .mini-sub.one{grid-template-columns:1fr}
@@ -124,8 +106,6 @@ body{
 .ms-label{font-family:var(--fn-sans);font-size:10px;color:var(--muted);letter-spacing:-.01em;font-weight:400}
 .ms-val{font-family:var(--fn-mono);font-size:16px;font-weight:500}
 .ms-val.s{color:var(--green)}.ms-val.c{color:var(--orange)}.ms-val.p{color:var(--purple)}
-
-/* ── RESULT PANEL ── */
 .result-wrap{background:var(--s1);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px}
 .res-grand-total{padding:16px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .rgt-left{display:flex;flex-direction:column;gap:3px}
@@ -134,8 +114,6 @@ body{
 .rgt-right{text-align:right}
 .rgt-cnt{font-family:var(--fn-mono);font-size:22px;color:var(--text);font-weight:500;line-height:1}
 .rgt-amt{font-family:var(--fn-mono);font-size:11px;color:var(--muted);margin-top:4px}
-
-/* dynamic income blocks */
 .payout-block{border-bottom:1px solid var(--border)}
 .res-income{padding:20px 18px;background:linear-gradient(135deg,rgba(52,211,153,.06) 0%,transparent 60%)}
 .res-carry{padding:16px 18px;background:linear-gradient(135deg,rgba(240,180,41,.04) 0%,transparent 60%);border-bottom:1px solid var(--border)}
@@ -152,8 +130,6 @@ body{
 .ri-unit{font-family:var(--fn-mono);font-size:12px;color:var(--muted);margin-bottom:4px}
 .ri-calc{font-family:var(--fn-mono);font-size:10px;color:var(--muted);letter-spacing:.02em;margin-top:2px}
 .ri-calc span{color:var(--text)}
-
-/* BRAND CARDS */
 .rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .rc-main{display:flex;align-items:flex-end;gap:8px;margin-bottom:6px}
 .rc-amount{font-family:var(--fn-mono);font-size:28px;font-weight:500;line-height:1}
@@ -171,8 +147,6 @@ body{
 .bb-detail{flex:1;padding:7px 12px;display:flex;align-items:center;gap:6px;font-family:var(--fn-sans);font-size:10px;color:var(--muted);flex-wrap:wrap}
 .bb-txt{color:var(--gold);background:rgba(240,180,41,.1);padding:2px 7px;border-radius:3px;font-family:var(--fn-sans);font-weight:500}
 .bb-total{font-family:var(--fn-mono);font-size:13px;color:var(--text);font-weight:500;margin-left:auto}
-
-/* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;justify-content:center;align-items:center;padding:20px}
 .modal-overlay.show{display:flex}
 .modal{background:var(--s1);border:1px solid var(--border);border-radius:8px;width:100%;max-width:400px;padding:20px}
@@ -183,22 +157,18 @@ body{
 .m-group select{font-family:var(--fn-sans);font-size:12px}
 .m-group input:focus,.m-group select:focus{border-color:var(--gold)}
 .client-list{margin-top:20px;border-top:1px solid var(--border);padding-top:15px}
-/* 모달 거래처 목록 버튼 스타일 (기존 .c-item-del 대체) */
-.c-item {display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--s2);border:1px solid var(--border);margin-bottom:5px;border-radius:4px;font-family:var(--fn-sans);font-size:11px}
-.c-item-actions {display:flex;gap:4px;align-items:center}
-.c-item-btn {cursor:pointer;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-family:var(--fn-sans);font-size:10px;font-weight:600;padding:4px 6px;color:var(--text);transition:all 0.15s;display:flex;align-items:center;justify-content:center}
-.c-item-btn:hover {background:var(--s3)}
-.c-item-btn.move {color:var(--muted);padding:4px}
-.c-item-btn.edit {color:var(--blue);border-color:rgba(96,165,250,.3)}
-.c-item-btn.del {color:var(--red);border-color:rgba(248,113,113,.3)}
-.c-item-btn:disabled {opacity:0.3;cursor:not-allowed}
-
+.c-item{display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--s2);border:1px solid var(--border);margin-bottom:5px;border-radius:4px;font-family:var(--fn-sans);font-size:11px}
+.c-item-actions{display:flex;gap:4px;align-items:center}
+.c-item-btn{cursor:pointer;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-family:var(--fn-sans);font-size:10px;font-weight:600;padding:4px 6px;color:var(--text);transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.c-item-btn:hover{background:var(--s3)}
+.c-item-btn.move{color:var(--muted);padding:4px}
+.c-item-btn.edit{color:var(--blue);border-color:rgba(96,165,250,.3)}
+.c-item-btn.del{color:var(--red);border-color:rgba(248,113,113,.3)}
+.c-item-btn:disabled{opacity:0.3;cursor:not-allowed}
 .modal-btns{display:flex;gap:10px;margin-top:15px}
 .modal-btns button{flex:1;padding:10px;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-family:var(--fn-sans);font-size:13px}
 .btn-close{background:var(--s3);color:var(--text)}
 .btn-add{background:var(--gold);color:#000}
-
-/* ── FOOTER ── */
 .footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between}
 .footer span{font-family:var(--fn-mono);font-size:8px;color:var(--dim);letter-spacing:.07em}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-family:var(--fn-sans);font-weight:700;font-size:12px;padding:12px 24px;border-radius:30px;box-shadow:0 4px 12px rgba(0,0,0,0.3);opacity:0;pointer-events:none;transition:opacity 0.3s,bottom 0.3s;z-index:9999}
@@ -214,7 +184,7 @@ body{
   <div>
     <div class="hdr-eye">배송 정산 시스템</div>
     <div class="hdr-title">Nouema CALC</div>
-    <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 · 동적 정산 엔진 v9.2</div>
+    <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 · 동적 정산 엔진 v9.3</div>
   </div>
   <div class="month-pick">
     <button class="mp-arr" onclick="changeMonth(-1)">&#8592;</button>
@@ -272,7 +242,7 @@ body{
 </div>
 
 <div class="footer">
-  <span>Nouema © 2026 · 시스템 v9.2</span>
+  <span>Nouema © 2026 · 시스템 v9.3</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -326,7 +296,7 @@ body{
 let Y = new Date().getFullYear();
 let M = new Date().getMonth() + 1;
 let saveTimer = {};
-let editingIndex = -1; // [추가됨] 현재 수정 중인 거래처의 인덱스를 저장 (-1이면 새 거래처 추가 상태)
+let editingIndex = -1;
 
 const DEFAULT_CLIENTS = [
   { id:'ms', name:'무신사', cutoff:25, offset:1, payoutDay:7, color:'c_green' },
@@ -562,50 +532,72 @@ function updatePrevBanner(client){
   }
 }
 
+// ★ 핵심 수정: compute() - 전월 정산분도 당월 화면에 반영
 function compute(){
   const unit = parseFloat(document.getElementById('unitPrice').value)||0;
   const max = ld();
-  const p = prevYM();
-  const prevData = loadData(p.y,p.m);
-  const curData = loadData(Y,M);
-  const prevLd = lastDay(p.y,p.m);
-
   let totalCurCnt = 0;
   let payouts = {};
 
-  clients.forEach(c => {
-      const curSum = getSum(c.id, 1, max);
-      totalCurCnt += curSum;
+  // 최대 몇 달 전까지 조회할지 계산 (뉴발란스 offset=2 → 2개월 전까지)
+  const maxOffset = clients.reduce((m, c) => Math.max(m, parseInt(c.offset)), 0);
 
-      const startDay = c.cutoff < 31 ? c.cutoff + 1 : 1;
-      if (c.offset > 0 || c.cutoff < 31) {
-          for(let d=startDay; d<=prevLd; d++) {
-              let qty = parseFloat(prevData[c.id]?.[d]) || 0;
-              if (qty > 0) {
-                  let payDate = getPayoutDate(p.y, p.m, d, c);
-                  let pKey = getPayoutKey(payDate);
-                  if(!payouts[pKey]) payouts[pKey] = { date: payDate, items: [], totalCnt: 0 };
-                  let exist = payouts[pKey].items.find(i => i.id === c.id);
-                  if(exist) exist.cnt += qty;
-                  else payouts[pKey].items.push({ id: c.id, name: c.name, type: '전월 이월', cnt: qty });
-                  payouts[pKey].totalCnt += qty;
-              }
-          }
-      }
+  // ★ 이전 달들의 미지급 데이터 전부 수집 (정산분 + 이월분 모두)
+  for(let lb = maxOffset + 1; lb >= 1; lb--) {
+      let lookY = Y, lookM = M - lb;
+      while(lookM < 1) { lookM += 12; lookY--; }
+      const lookData = loadData(lookY, lookM);
+      const lookLd = lastDay(lookY, lookM);
 
-      for(let d=1; d<=max; d++) {
-          let qty = parseFloat(curData[c.id]?.[d]) || 0;
-          if (qty > 0) {
-              let payDate = getPayoutDate(Y, M, d, c);
+      clients.forEach(c => {
+          for(let d = 1; d <= lookLd; d++) {
+              let qty = parseFloat(lookData[c.id]?.[d]) || 0;
+              if (qty <= 0) continue;
+
+              let payDate = getPayoutDate(lookY, lookM, d, c);
+              // 이미 지급된 것(현재 월 기준 과거)은 제외
+              let payMonthDiff = (payDate.y - Y) * 12 + (payDate.m - M);
+              if (payMonthDiff < 0) continue;
+
               let pKey = getPayoutKey(payDate);
               if(!payouts[pKey]) payouts[pKey] = { date: payDate, items: [], totalCnt: 0 };
-              let typeLabel = d <= c.cutoff ? '당월 정산' : '당월 작업분 이월';
-              if(c.cutoff === 31 && c.offset > 0) typeLabel = '당월 전체 이월';
+
+              let typeLabel;
+              if (lb === 1) {
+                  typeLabel = d <= c.cutoff ? '전월 정산' : '전월 이월';
+              } else {
+                  typeLabel = `${lb}개월 전 작업분`;
+              }
+
               let exist = payouts[pKey].items.find(i => i.id === c.id && i.type === typeLabel);
               if(exist) exist.cnt += qty;
               else payouts[pKey].items.push({ id: c.id, name: c.name, type: typeLabel, cnt: qty });
               payouts[pKey].totalCnt += qty;
           }
+      });
+  }
+
+  // 당월 데이터 처리
+  clients.forEach(c => {
+      const curSum = getSum(c.id, 1, max);
+      totalCurCnt += curSum;
+
+      for(let d = 1; d <= max; d++) {
+          let qty = parseFloat(document.querySelector(`#grid_${c.id} input[data-day="${d}"]`)?.value) || 0;
+          if (qty <= 0) continue;
+
+          let payDate = getPayoutDate(Y, M, d, c);
+          let pKey = getPayoutKey(payDate);
+          if(!payouts[pKey]) payouts[pKey] = { date: payDate, items: [], totalCnt: 0 };
+
+          let typeLabel;
+          if (c.cutoff === 31 && c.offset > 0) typeLabel = '당월 전체 이월';
+          else typeLabel = d <= c.cutoff ? '당월 정산' : '당월 이월';
+
+          let exist = payouts[pKey].items.find(i => i.id === c.id && i.type === typeLabel);
+          if(exist) exist.cnt += qty;
+          else payouts[pKey].items.push({ id: c.id, name: c.name, type: typeLabel, cnt: qty });
+          payouts[pKey].totalCnt += qty;
       }
   });
 
@@ -657,11 +649,16 @@ function compute(){
             <div class="bb-name">${item.name}</div>
             <div class="bb-detail"><span class="bb-txt">${item.type}</span><span class="bb-total">${item.cnt}건</span></div>
           </div>`).join('');
+
+          // 지급월 레이블 결정
+          let monthDiff = (dObj.y - Y) * 12 + (dObj.m - M);
+          let badgeLabel = monthDiff === 0 ? `${dObj.m}월 수령 (이번달 정산)` : `${dObj.m}월 수령 예정 (정산분)`;
+
           wrap.innerHTML += `
           <div class="payout-block">
             <div class="res-income">
               <div class="ri-top">
-                <div class="ri-badge badge-s">${dObj.m}월 수령 예정 (정산분)</div>
+                <div class="ri-badge badge-s">${badgeLabel}</div>
                 <div class="ri-date">${dObj.y}.${String(dObj.m).padStart(2,'0')}.${String(dObj.d).padStart(2,'0')}</div>
               </div>
               <div class="ri-main"><div class="ri-amount amt-s">${fmt(net)}</div><div class="ri-unit">원</div></div>
@@ -723,31 +720,26 @@ function compute(){
   }
 }
 
-// 모달 및 거래처 관리 관련 함수들
-function openModal() { 
-    editingIndex = -1; 
+function openModal() {
+    editingIndex = -1;
     resetModalInputs();
-    renderModalList(); 
-    document.getElementById('clientModal').classList.add('show'); 
+    renderModalList();
+    document.getElementById('clientModal').classList.add('show');
 }
-
-function closeModal() { 
-    document.getElementById('clientModal').classList.remove('show'); 
+function closeModal() {
+    document.getElementById('clientModal').classList.remove('show');
     resetModalInputs();
 }
-
 function resetModalInputs() {
     editingIndex = -1;
-    document.getElementById('mName').value = ''; 
+    document.getElementById('mName').value = '';
     document.getElementById('mCutoff').value = '';
     document.getElementById('mPayout').value = '';
-    
     const addBtn = document.querySelector('.btn-add');
     addBtn.textContent = '+ 추가하기';
     addBtn.style.background = 'var(--gold)';
     addBtn.style.color = '#000';
 }
-
 function renderModalList() {
     document.getElementById('modalClientList').innerHTML = clients.map((c, i) => `
         <div class="c-item">
@@ -763,16 +755,12 @@ function renderModalList() {
         </div>
     `).join('');
 }
-
 function moveClient(idx, dir) {
     if (idx + dir < 0 || idx + dir >= clients.length) return;
-    const temp = clients[idx];
-    clients[idx] = clients[idx + dir];
-    clients[idx + dir] = temp;
+    const temp = clients[idx]; clients[idx] = clients[idx + dir]; clients[idx + dir] = temp;
     localStorage.setItem('nouema_v9_clients', JSON.stringify(clients));
     renderUIStructure(); render(); renderModalList();
 }
-
 function editClient(idx) {
     editingIndex = idx;
     const c = clients[idx];
@@ -781,13 +769,11 @@ function editClient(idx) {
     document.getElementById('mOffset').value = c.offset;
     document.getElementById('mPayout').value = c.payoutDay;
     document.getElementById('mColor').value = c.color;
-
     const addBtn = document.querySelector('.btn-add');
     addBtn.textContent = '✓ 수정 완료';
     addBtn.style.background = 'var(--blue)';
     addBtn.style.color = '#fff';
 }
-
 function addClient() {
     const name = document.getElementById('mName').value;
     const cutoff = document.getElementById('mCutoff').value || 31;
@@ -795,7 +781,6 @@ function addClient() {
     const payout = document.getElementById('mPayout').value;
     const color = document.getElementById('mColor').value;
     if(!name || !payout) return alert('거래처 이름과 지급일을 입력해주세요.');
-
     if (editingIndex > -1) {
         clients[editingIndex].name = name;
         clients[editingIndex].cutoff = parseInt(cutoff);
@@ -805,24 +790,17 @@ function addClient() {
     } else {
         clients.push({ id: 'c_' + Date.now(), name, cutoff: parseInt(cutoff), offset: parseInt(offset), payoutDay: parseInt(payout), color });
     }
-
     localStorage.setItem('nouema_v9_clients', JSON.stringify(clients));
-    resetModalInputs(); 
-    renderUIStructure(); render(); renderModalList();
+    resetModalInputs(); renderUIStructure(); render(); renderModalList();
 }
-
 function deleteClient(idx) {
     if(!confirm(`[${clients[idx].name}] 거래처를 삭제하시겠습니까?`)) return;
     clients.splice(idx, 1);
     localStorage.setItem('nouema_v9_clients', JSON.stringify(clients));
-    
     const exists = clients.find(c => c.id === activeTab);
     if (!exists && clients.length > 0) activeTab = clients[0].id;
-    
-    resetModalInputs();
-    renderUIStructure(); render(); renderModalList();
+    resetModalInputs(); renderUIStructure(); render(); renderModalList();
 }
-
 function exportBackup() {
   saveData();
   const backupData = {};
@@ -837,7 +815,6 @@ function exportBackup() {
   a.download = `Nouema_V9_backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
   a.click(); showToast('백업 파일이 다운로드 되었습니다.');
 }
-
 function importBackup(e) {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
@@ -857,7 +834,6 @@ function importBackup(e) {
   };
   reader.readAsText(file); e.target.value = '';
 }
-
 function handleFile(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
@@ -867,7 +843,6 @@ function handleFile(e){
   };
   reader.readAsBinaryString(file); e.target.value='';
 }
-
 function parseRows(rows,fname){
   if(!rows||rows.length<2){setXlStatus('데이터 없음',false);return}
   let count=0;
@@ -882,7 +857,6 @@ function parseRows(rows,fname){
   if(count>0){saveData();render();setXlStatus(`✓ ${fname} — 적용 완료`,true);showToast('엑셀 데이터가 적용되었습니다.');}
   else setXlStatus('입력된 데이터가 없습니다.',false);
 }
-
 function parseDay(val){
   if(!val)return null;
   if(val instanceof Date)return val.getDate();
@@ -901,7 +875,6 @@ function dlTemplate(e){
   XLSX.utils.book_append_sheet(wb,ws,'입력서식');
   XLSX.writeFile(wb,`Nouema_동적입력서식_${Y}${String(M).padStart(2,'0')}.xlsx`);
 }
-
 const zone=document.getElementById('xlZone');
 zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag')});
 zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
@@ -912,4 +885,4 @@ zone.addEventListener('drop',e=>{
 });
 </script>
 </body>
-</html>
+  </html>
