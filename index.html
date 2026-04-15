@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nouema 정산 계산기 v9.3</title>
+<title>Nouema 정산 계산기 v9.4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -184,7 +184,7 @@ body{
   <div>
     <div class="hdr-eye">배송 정산 시스템</div>
     <div class="hdr-title">Nouema CALC</div>
-    <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 · 동적 정산 엔진 v9.3</div>
+    <div class="hdr-sub">실시간 연산 · 데이터 백업/복원 · 동적 정산 엔진 v9.4</div>
   </div>
   <div class="month-pick">
     <button class="mp-arr" onclick="changeMonth(-1)">&#8592;</button>
@@ -242,7 +242,7 @@ body{
 </div>
 
 <div class="footer">
-  <span>Nouema © 2026 · 시스템 v9.3</span>
+  <span>Nouema © 2026 · 시스템 v9.4</span>
   <span>TAX 3.3% · DEPOSIT ₩10,000</span>
 </div>
 </div>
@@ -439,6 +439,32 @@ function render() {
   compute();
 }
 
+// 테마 컬러 → 실제 색상값 매핑
+const THEME_COLORS = {
+  c_green:  { r:'52,211,153',  hex:'#34d399' },
+  c_blue:   { r:'96,165,250',  hex:'#60a5fa' },
+  c_purple: { r:'167,139,250', hex:'#a78bfa' },
+  c_orange: { r:'224,123,57',  hex:'#e07b39' },
+  c_muted:  { r:'74,80,112',   hex:'#4a5070' },
+};
+const CARRY_COLOR = { r:'224,123,57', hex:'#e07b39' }; // 이월은 항상 주황
+
+function getCellStyle(client, day) {
+  const tc = THEME_COLORS[client.color] || THEME_COLORS.c_green;
+  let isSettle;
+  if (client.cutoff < 31) {
+    isSettle = day <= client.cutoff;
+  } else {
+    isSettle = client.offset === 0;
+  }
+  const col = isSettle ? tc : CARRY_COLOR;
+  return {
+    border: `rgba(${col.r},.35)`,
+    bg: `rgba(${col.r},.06)`,
+    focusBorder: col.hex
+  };
+}
+
 function buildGrid(client){
   const maxDay=ld();
   const firstDow=(new Date(Y,M-1,1).getDay()+6)%7;
@@ -464,6 +490,13 @@ function buildGrid(client){
       inp.type='number';inp.min=0;inp.placeholder='0';
       inp.dataset.day=day;
       inp.value=data[client.id][day]||'';
+
+      // ★ 테마 컬러 기반 셀 색상 적용
+      const cs = getCellStyle(client, day);
+      inp.style.borderColor = cs.border;
+      inp.style.backgroundColor = cs.bg;
+      inp.addEventListener('focus', () => { inp.style.borderColor = cs.focusBorder; inp.style.backgroundColor = 'var(--s2)'; });
+      inp.addEventListener('blur',  () => { inp.style.borderColor = cs.border; inp.style.backgroundColor = cs.bg; });
 
       if(client.cutoff < 31) {
           cell.classList.add(day <= client.cutoff ? 'settle' : 'carry-c');
@@ -885,4 +918,4 @@ zone.addEventListener('drop',e=>{
 });
 </script>
 </body>
-      </html>
+</html>
