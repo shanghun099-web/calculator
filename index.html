@@ -2024,10 +2024,9 @@ function renderClientList() {
       inputHTML = `
         <div class="single-input type-next">
           <div class="slot-label">
-            <span>${m}월 달력 전체 작업</span>
+            <span>${m}월 1일 ~ ${lastDay}일</span>
             <span class="slot-tag">● ${pay2Lbl} 지급</span>
           </div>
-          <div class="slot-period">${m}월 1일 ~ ${lastDay}일 · 익월정산 규칙</div>
           <div class="slot-input-wrap">
             <input type="number" min="0" value="${nCnt||''}" placeholder="0"
                    onchange="updateCount('${c.id}','next',this.value)" inputmode="numeric">
@@ -2042,9 +2041,8 @@ function renderClientList() {
           <div class="input-slot slot-current">
             <div class="slot-label">
               <span>${m}월 1일 ~ ${c.cutoff}일</span>
-              <span class="slot-tag">● ${pay1Lbl}</span>
+              <span class="slot-tag">● ${pay1Lbl} 지급</span>
             </div>
-            <div class="slot-period">이번 달 정산에 포함</div>
             <div class="slot-input-wrap">
               <input type="number" min="0" value="${cCnt||''}" placeholder="0"
                      onchange="updateCount('${c.id}','current',this.value)" inputmode="numeric">
@@ -2054,9 +2052,8 @@ function renderClientList() {
           <div class="input-slot slot-next">
             <div class="slot-label">
               <span>${m}월 ${c.cutoff+1}일 ~ ${lastDay}일</span>
-              <span class="slot-tag">● ${pay2Lbl}</span>
+              <span class="slot-tag">● ${pay2Lbl} 지급</span>
             </div>
-            <div class="slot-period">다음 달 정산으로 이월</div>
             <div class="slot-input-wrap">
               <input type="number" min="0" value="${nCnt||''}" placeholder="0"
                      onchange="updateCount('${c.id}','next',this.value)" inputmode="numeric">
@@ -2073,7 +2070,6 @@ function renderClientList() {
             <span>${m}월 1일 ~ ${lastDay}일</span>
             <span class="slot-tag">● ${pay1Lbl} 지급</span>
           </div>
-          <div class="slot-period">이번 달 달력 전체 작업분</div>
           <div class="slot-input-wrap">
             <input type="number" min="0" value="${cCnt||''}" placeholder="0"
                    onchange="updateCount('${c.id}','current',this.value)" inputmode="numeric">
